@@ -1,0 +1,47 @@
+# Arquivos e pastas que devem ser ignorados pelo Git
+
+# Arquivos de build do Flutter
+build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+/build/
+
+# Arquivos de configuração do IDE
+.vscode/
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Arquivos de sistema
+.DS_Store
+Thumbs.db
+
+# Arquivos de log
+*.log
+
+# Arquivos temporários
+*.tmp
+*.temp
+
+# Arquivos de ambiente
+.env
+.env.local
+.env.production
+
+# Arquivos de chaves e certificados
+*.p12
+*.pem
+*.key
+*.crt
+
+# Arquivos de backup
+*.bak
+*.backup
+
+# Arquivos de cache
+*.cache
