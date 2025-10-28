@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../config/app_config.dart';
 import '../services/dashboard_service.dart';
-import '../models/api_response.dart';
 import '../models/agendamento.dart';
 
 class AgendamentosScreen extends StatefulWidget {
@@ -59,7 +58,7 @@ class _AgendamentosScreenState extends State<AgendamentosScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Agendamentos'),
-        backgroundColor: AppConfig.tenants['soulclinic']!.primaryColor,
+        backgroundColor: Color(AppConfig.tenants['soulclinic']!.primaryColor),
         foregroundColor: Colors.white,
         actions: [
           IconButton(

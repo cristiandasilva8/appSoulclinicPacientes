@@ -1,3 +1,5 @@
+import 'user.dart';
+
 class Vacina {
   final int id;
   final String nome;

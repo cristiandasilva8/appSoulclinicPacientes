@@ -21,14 +21,14 @@ class PortalPacienteApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           primarySwatch: Colors.blue,
-          primaryColor: AppConfig.tenants['soulclinic']!.primaryColor,
+          primaryColor: Color(AppConfig.tenants['soulclinic']!.primaryColor),
           useMaterial3: true,
           appBarTheme: AppBarTheme(
-            backgroundColor: AppConfig.tenants['soulclinic']!.primaryColor,
+            backgroundColor: Color(AppConfig.tenants['soulclinic']!.primaryColor),
             foregroundColor: Colors.white,
             elevation: AppConfig.elevation,
           ),
-          cardTheme: CardTheme(
+          cardTheme: CardThemeData(
             elevation: AppConfig.elevation,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppConfig.borderRadius),

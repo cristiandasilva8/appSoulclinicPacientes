@@ -1,3 +1,5 @@
+import 'user.dart';
+
 class ApiResponse<T> {
   final bool success;
   final String message;

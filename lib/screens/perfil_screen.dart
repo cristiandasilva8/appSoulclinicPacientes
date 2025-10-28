@@ -74,7 +74,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Perfil'),
-        backgroundColor: AppConfig.tenants['soulclinic']!.primaryColor,
+        backgroundColor: Color(AppConfig.tenants['soulclinic']!.primaryColor),
         foregroundColor: Colors.white,
         actions: [
           if (!_isEditing)
@@ -170,7 +170,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
         children: [
           CircleAvatar(
             radius: 60,
-            backgroundColor: AppConfig.tenants['soulclinic']!.primaryColor,
+            backgroundColor: Color(AppConfig.tenants['soulclinic']!.primaryColor),
             backgroundImage: _user!.fotoUrl != null
                 ? NetworkImage(_user!.fotoUrl!)
                 : null,
@@ -191,7 +191,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
               right: 0,
               child: Container(
                 decoration: BoxDecoration(
-                  color: AppConfig.tenants['soulclinic']!.primaryColor,
+                  color: Color(AppConfig.tenants['soulclinic']!.primaryColor),
                   shape: BoxShape.circle,
                   border: Border.all(color: Colors.white, width: 2),
                 ),
@@ -473,7 +473,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
           child: ElevatedButton(
             onPressed: _salvarPerfil,
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppConfig.tenants['soulclinic']!.primaryColor,
+              backgroundColor: Color(AppConfig.tenants['soulclinic']!.primaryColor),
               foregroundColor: Colors.white,
             ),
             child: const Text('Salvar'),

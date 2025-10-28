@@ -50,8 +50,8 @@ class _LoginScreenState extends State<LoginScreen> {
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                AppConfig.tenants[_selectedTenant]!.primaryColor.withOpacity(0.8),
-                AppConfig.tenants[_selectedTenant]!.primaryColor,
+                Color(AppConfig.tenants[_selectedTenant]!.primaryColor).withOpacity(0.8),
+                Color(AppConfig.tenants[_selectedTenant]!.primaryColor),
               ],
             ),
           ),
@@ -79,7 +79,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               return Icon(
                                 Icons.local_hospital,
                                 size: 80,
-                                color: AppConfig.tenants[_selectedTenant]!.primaryColor,
+                                color: Color(AppConfig.tenants[_selectedTenant]!.primaryColor),
                               );
                             },
                           ),
@@ -90,7 +90,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             'Portal do Paciente',
                             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                               fontWeight: FontWeight.bold,
-                              color: AppConfig.tenants[_selectedTenant]!.primaryColor,
+                              color: Color(AppConfig.tenants[_selectedTenant]!.primaryColor),
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -175,7 +175,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 child: ElevatedButton(
                                   onPressed: state is AuthLoading ? null : _login,
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: AppConfig.tenants[_selectedTenant]!.primaryColor,
+                                    backgroundColor: Color(AppConfig.tenants[_selectedTenant]!.primaryColor),
                                     foregroundColor: Colors.white,
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(AppConfig.borderRadius),

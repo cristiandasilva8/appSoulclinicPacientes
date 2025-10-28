@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../config/app_config.dart';
 import '../services/auth_bloc.dart';
 import '../services/dashboard_service.dart';
-import '../models/api_response.dart';
 import '../models/agendamento.dart';
 import 'perfil_screen.dart';
 import 'agendamentos_screen.dart';
@@ -59,7 +58,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Portal do Paciente'),
-        backgroundColor: AppConfig.tenants['soulclinic']!.primaryColor,
+        backgroundColor: Color(AppConfig.tenants['soulclinic']!.primaryColor),
         foregroundColor: Colors.white,
         actions: [
           IconButton(
