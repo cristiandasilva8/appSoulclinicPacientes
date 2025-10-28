@@ -104,7 +104,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           
                           // Informações de debug
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                             decoration: BoxDecoration(
                               color: AppConfig.isDebug ? Colors.orange[100] : Colors.green[100],
                               borderRadius: BorderRadius.circular(16),
@@ -113,22 +114,38 @@ class _LoginScreenState extends State<LoginScreen> {
                                 width: 1,
                               ),
                             ),
-                            child: Row(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(
-                                  AppConfig.isDebug ? Icons.bug_report : Icons.check_circle,
-                                  size: 16,
-                                  color: AppConfig.isDebug ? Colors.orange[700] : Colors.green[700],
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      AppConfig.isDebug ? Icons.bug_report : Icons.check_circle,
+                                      size: 16,
+                                      color: AppConfig.isDebug ? Colors.orange[700] : Colors.green[700],
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      AppConfig.environmentInfo,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppConfig.isDebug ? Colors.orange[700] : Colors.green[700],
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(width: 4),
+                                const SizedBox(height: 4),
                                 Text(
-                                  '${AppConfig.environmentInfo} - ${AppConfig.currentBaseUrl}',
+                                  AppConfig.currentBaseUrl,
                                   style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppConfig.isDebug ? Colors.orange[700] : Colors.green[700],
+                                    fontSize: 10,
+                                    color: AppConfig.isDebug ? Colors.orange[600] : Colors.green[600],
                                   ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ],
                             ),

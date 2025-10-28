@@ -3,8 +3,8 @@ class AppConfig {
   static const bool isDebug = bool.fromEnvironment('dart.vm.product') == false;
   
   // URLs baseadas no ambiente
-  static const String _baseUrlProducao = 'https://api.soulclinic.com/api/portal';
-  static const String _baseUrlHomologacao = 'https://api-homolog.soulclinic.com/api/portal';
+  static const String _baseUrlProducao = 'https://production.soulclinic.com.br/api/portal';
+  static const String _baseUrlHomologacao = 'http://localhost:8080/api/portal';
   
   // Configurações de Multitenancy
   static const Map<String, TenantConfig> tenants = {
@@ -17,7 +17,7 @@ class AppConfig {
     ),
     'clinicaexemplo': TenantConfig(
       name: 'Clínica Exemplo',
-      baseUrl: isDebug ? 'https://api-homolog.exemplo.com/api/portal' : 'https://api.exemplo.com/api/portal',
+      baseUrl: isDebug ? 'http://localhost:8080/api/portal' : 'https://production.exemplo.com.br/api/portal',
       primaryColor: 0xFF4CAF50,
       logoUrl: 'assets/images/exemplo_logo.png',
       crmDomain: 'exemplo.com',
