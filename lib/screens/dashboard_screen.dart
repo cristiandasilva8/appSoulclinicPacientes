@@ -58,7 +58,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Portal do Paciente'),
-        backgroundColor: Color(AppConfig.tenants['soulclinic']!.primaryColor),
+        backgroundColor: Color(AppConfig.currentTenant.primaryColor),
         foregroundColor: Colors.white,
         actions: [
           IconButton(

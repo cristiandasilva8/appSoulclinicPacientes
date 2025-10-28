@@ -2,13 +2,15 @@ import 'dart:convert';
 import '../models/api_response.dart';
 import '../models/user.dart';
 import 'api_service.dart';
+import 'cliente_service.dart';
 
 class AuthService {
   final ApiService _apiService = ApiService();
+  final ClienteService _clienteService = ClienteService();
 
   // Login
   Future<ApiResponse<LoginResponse>> login({
-    required String email,
+    required String cpf,
     required String senha,
     required String dbGroup,
   }) async {
@@ -18,7 +20,7 @@ class AuthService {
     final response = await _apiService.post<LoginResponse>(
       '/auth/login',
       data: LoginRequest(
-        email: email,
+        cpf: cpf,
         senha: senha,
         dbGroup: dbGroup,
       ).toJson(),
@@ -129,5 +131,15 @@ class AuthService {
         'confirmar_senha': confirmarSenha,
       },
     );
+  }
+
+  // Buscar clientes disponíveis (para debug)
+  Future<ApiResponse<List<ClienteInfo>>> buscarClientesDisponiveis() async {
+    return await _clienteService.listarClientes(limite: 50);
+  }
+
+  // Buscar cliente por CPF
+  Future<ApiResponse<ClienteInfo>> buscarClientePorCpf(String cpf) async {
+    return await _clienteService.buscarClientePorCpf(cpf);
   }
 }

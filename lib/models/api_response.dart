@@ -54,19 +54,19 @@ class Paginacao {
 }
 
 class LoginRequest {
-  final String email;
+  final String cpf;
   final String senha;
   final String dbGroup;
 
   LoginRequest({
-    required this.email,
+    required this.cpf,
     required this.senha,
     required this.dbGroup,
   });
 
   Map<String, dynamic> toJson() {
     return {
-      'email': email,
+      'cpf': cpf,
       'senha': senha,
       'db_group': dbGroup,
     };

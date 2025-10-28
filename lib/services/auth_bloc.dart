@@ -6,12 +6,12 @@ import '../services/auth_service.dart';
 abstract class AuthEvent {}
 
 class LoginRequested extends AuthEvent {
-  final String email;
+  final String cpf;
   final String senha;
   final String dbGroup;
 
   LoginRequested({
-    required this.email,
+    required this.cpf,
     required this.senha,
     required this.dbGroup,
   });
@@ -63,7 +63,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     try {
       final response = await _authService.login(
-        email: event.email,
+        cpf: event.cpf,
         senha: event.senha,
         dbGroup: event.dbGroup,
       );

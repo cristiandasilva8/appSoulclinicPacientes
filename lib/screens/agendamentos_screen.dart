@@ -58,7 +58,7 @@ class _AgendamentosScreenState extends State<AgendamentosScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Agendamentos'),
-        backgroundColor: Color(AppConfig.tenants['soulclinic']!.primaryColor),
+        backgroundColor: Color(AppConfig.currentTenant.primaryColor),
         foregroundColor: Colors.white,
         actions: [
           IconButton(

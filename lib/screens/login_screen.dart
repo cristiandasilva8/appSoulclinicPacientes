@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../config/app_config.dart';
 import '../services/auth_bloc.dart';
-import '../widgets/tenant_selector.dart';
 import 'dashboard_screen.dart';
+import 'debug_clientes_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -14,14 +14,13 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
+  final _cpfController = TextEditingController();
   final _senhaController = TextEditingController();
-  String _selectedTenant = 'soulclinic';
   bool _obscurePassword = true;
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _cpfController.dispose();
     _senhaController.dispose();
     super.dispose();
   }
@@ -50,8 +49,8 @@ class _LoginScreenState extends State<LoginScreen> {
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                Color(AppConfig.tenants[_selectedTenant]!.primaryColor).withOpacity(0.8),
-                Color(AppConfig.tenants[_selectedTenant]!.primaryColor),
+                Color(AppConfig.currentTenant.primaryColor).withOpacity(0.8),
+                Color(AppConfig.currentTenant.primaryColor),
               ],
             ),
           ),
@@ -73,13 +72,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         children: [
                           // Logo
                           Image.asset(
-                            AppConfig.tenants[_selectedTenant]!.logoUrl,
+                            AppConfig.currentTenant.logoUrl,
                             height: 80,
                             errorBuilder: (context, error, stackTrace) {
                               return Icon(
                                 Icons.local_hospital,
                                 size: 80,
-                                color: Color(AppConfig.tenants[_selectedTenant]!.primaryColor),
+                                color: Color(AppConfig.currentTenant.primaryColor),
                               );
                             },
                           ),
@@ -90,45 +89,70 @@ class _LoginScreenState extends State<LoginScreen> {
                             'Portal do Paciente',
                             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                               fontWeight: FontWeight.bold,
-                              color: Color(AppConfig.tenants[_selectedTenant]!.primaryColor),
+                              color: Color(AppConfig.currentTenant.primaryColor),
                             ),
                           ),
                           const SizedBox(height: 8),
                           
                           Text(
-                            AppConfig.tenants[_selectedTenant]!.name,
+                            AppConfig.currentTenant.name,
                             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                               color: Colors.grey[600],
                             ),
                           ),
+                          const SizedBox(height: 8),
+                          
+                          // Informações de debug
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: AppConfig.isDebug ? Colors.orange[100] : Colors.green[100],
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: AppConfig.isDebug ? Colors.orange : Colors.green,
+                                width: 1,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  AppConfig.isDebug ? Icons.bug_report : Icons.check_circle,
+                                  size: 16,
+                                  color: AppConfig.isDebug ? Colors.orange[700] : Colors.green[700],
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${AppConfig.environmentInfo} - ${AppConfig.currentBaseUrl}',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppConfig.isDebug ? Colors.orange[700] : Colors.green[700],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                           const SizedBox(height: 32),
 
-                          // Seletor de Tenant
-                          TenantSelector(
-                            selectedTenant: _selectedTenant,
-                            onTenantChanged: (tenant) {
-                              setState(() {
-                                _selectedTenant = tenant;
-                              });
-                            },
-                          ),
-                          const SizedBox(height: 24),
-
-                          // Campo Email
+                          // Campo CPF
                           TextFormField(
-                            controller: _emailController,
-                            keyboardType: TextInputType.emailAddress,
+                            controller: _cpfController,
+                            keyboardType: TextInputType.number,
                             decoration: const InputDecoration(
-                              labelText: 'Email',
-                              prefixIcon: Icon(Icons.email),
+                              labelText: 'CPF',
+                              hintText: '000.000.000-00',
+                              prefixIcon: Icon(Icons.person),
                               border: OutlineInputBorder(),
                             ),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
-                                return 'Por favor, insira seu email';
+                                return 'Por favor, insira seu CPF';
                               }
-                              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                                return 'Por favor, insira um email válido';
+                              // Validação básica de CPF (11 dígitos)
+                              final cpfDigits = value.replaceAll(RegExp(r'[^0-9]'), '');
+                              if (cpfDigits.length != 11) {
+                                return 'CPF deve ter 11 dígitos';
                               }
                               return null;
                             },
@@ -175,7 +199,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 child: ElevatedButton(
                                   onPressed: state is AuthLoading ? null : _login,
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: Color(AppConfig.tenants[_selectedTenant]!.primaryColor),
+                                    backgroundColor: Color(AppConfig.currentTenant.primaryColor),
                                     foregroundColor: Colors.white,
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(AppConfig.borderRadius),
@@ -208,6 +232,30 @@ class _LoginScreenState extends State<LoginScreen> {
                             },
                             child: const Text('Esqueci minha senha'),
                           ),
+                          
+                          // Botão de debug (apenas em modo debug)
+                          if (AppConfig.isDebug) ...[
+                            const SizedBox(height: 16),
+                            OutlinedButton.icon(
+                              onPressed: () async {
+                                final cpf = await Navigator.push<String>(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const DebugClientesScreen(),
+                                  ),
+                                );
+                                if (cpf != null) {
+                                  _cpfController.text = cpf;
+                                }
+                              },
+                              icon: const Icon(Icons.bug_report, size: 16),
+                              label: const Text('Debug - Ver Clientes'),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.orange,
+                                side: const BorderSide(color: Colors.orange),
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -223,11 +271,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _login() {
     if (_formKey.currentState!.validate()) {
+      // Detectar clínica automaticamente
+      final currentTenant = AppConfig.detectTenantFromCrm();
+      
       context.read<AuthBloc>().add(
         LoginRequested(
-          email: _emailController.text.trim(),
+          cpf: _cpfController.text.trim(),
           senha: _senhaController.text,
-          dbGroup: _selectedTenant,
+          dbGroup: currentTenant,
         ),
       );
     }
