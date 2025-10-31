@@ -1,91 +1,244 @@
 # Portal do Paciente - App Flutter
 
-App móvel para pacientes com suporte a multitenancy, desenvolvido em Flutter.
+App móvel completo para pacientes com suporte a multitenancy, desenvolvido em Flutter.
 
-## 🚀 Funcionalidades
+## 🚀 Funcionalidades Implementadas
 
-- **Autenticação JWT** com suporte a multitenancy
-- **Dashboard** com estatísticas e próximos agendamentos
-- **Agendamentos** - visualizar, cancelar e solicitar
-- **Perfil do Paciente** - editar informações pessoais
-- **Carteira de Vacinação** - histórico de vacinas
-- **Documentos** - acesso a exames e receitas
-- **Mensagens** - comunicação com profissionais
-- **Notificações** - lembretes e alertas
-- **Contas a Pagar** - visualizar e pagar faturas
+### ✅ Autenticação e Segurança
+- Login com CPF e senha
+- Autenticação JWT
+- Reset de senha por email
+- Alteração de senha
+- Logout seguro
+
+### ✅ Dashboard Completo
+- Cards de acesso rápido para todas as funcionalidades
+- Estatísticas em tempo real
+- Próximos agendamentos
+- Notificações recentes
+- Informações do ambiente (debug/produção)
+
+### ✅ Agendamentos
+- Listagem de agendamentos
+- Filtros por status, data e tipo
+- Detalhes do agendamento
+- Cancelamento com motivo
+- Solicitação de novos agendamentos
+
+### ✅ Carteira de Vacinação
+- Listagem completa de vacinas
+- Status das vacinas (aplicada, pendente, atrasada)
+- Detalhes de cada vacina
+- Documentos anexos
+- Geração de PDF da carteira
+- Estatísticas de vacinação
+
+### ✅ Documentos
+- Listagem de documentos médicos
+- Filtros por tipo e data
+- Download de documentos
+- Suporte a PDFs, exames, receitas, atestados
+
+### ✅ Mensagens
+- Listagem de mensagens do sistema e profissionais
+- Filtros por status e tipo
+- Marcar como lida
+- Detalhes da mensagem
+- Prioridades (normal, alta)
+
+### ✅ Notificações
+- Listagem de notificações
+- Filtros por status
+- Marcar como lida
+- Tipos: lembretes, agendamentos, vacinas, exames, pagamentos
+- Configurações de notificação
+
+### ✅ Contas a Pagar
+- Listagem de contas
+- Filtros por status e data
+- Estatísticas financeiras
+- Geração de cobrança (boleto e PIX)
+- QR Code para pagamento PIX
+
+### ✅ Perfil do Paciente
+- Visualização de dados pessoais
+- Edição de informações
+- Upload de foto
+- Preferências de contato
+
+### ✅ Configurações
+- Alteração de senha
+- Configurações de notificação
+- Configurações de privacidade
+- Informações de segurança
+- Logout
 
 ## 🏗️ Arquitetura
 
-- **Estado**: BLoC (flutter_bloc)
-- **HTTP**: Dio
-- **Armazenamento**: SharedPreferences
-- **UI**: Material Design 3
-- **Multitenancy**: Configuração por tenant
+### Estrutura do Projeto
+```
+lib/
+├── config/           # Configurações da aplicação
+├── models/           # Modelos de dados
+├── services/         # Serviços de API
+├── screens/          # Telas da aplicação
+├── utils/            # Utilitários
+└── widgets/          # Widgets reutilizáveis
+```
 
-## 📱 Telas Principais
+### Serviços Implementados
+- `AuthService` - Autenticação e login
+- `DashboardService` - Dados do dashboard
+- `AgendamentosService` - Gestão de agendamentos
+- `CarteiraVacinacaoService` - Carteira de vacinação
+- `DocumentosService` - Gestão de documentos
+- `MensagensService` - Sistema de mensagens
+- `NotificacoesService` - Notificações
+- `ContasPagarService` - Contas a pagar
+- `ConfiguracoesService` - Configurações
+- `PerfilService` - Perfil do paciente
 
-1. **Login** - Autenticação com seleção de tenant
-2. **Dashboard** - Visão geral com estatísticas
-3. **Agendamentos** - Lista e detalhes de agendamentos
-4. **Perfil** - Informações pessoais e preferências
+### Modelos de Dados
+- `User` - Dados do paciente
+- `Agendamento` - Agendamentos
+- `Vacina` - Vacinas e carteira
+- `ApiResponse` - Respostas da API
+- `Estatisticas` - Estatísticas do dashboard
 
 ## 🔧 Configuração
 
-### Dependências Principais
-
-```yaml
-dependencies:
-  flutter_bloc: ^8.1.3
-  dio: ^5.3.2
-  shared_preferences: ^2.2.2
-  jwt_decoder: ^2.0.1
-  image_picker: ^1.0.4
-```
-
-### Estrutura de Pastas
-
-```
-lib/
-├── config/          # Configurações e multitenancy
-├── models/           # Modelos de dados
-├── services/         # Serviços de API e BLoC
-├── screens/          # Telas da aplicação
-├── widgets/          # Componentes reutilizáveis
-└── utils/            # Utilitários
-```
-
-## 🌐 API
-
-Baseado na documentação `API_PORTAL_PACIENTE.md`:
-
-- **Base URL**: Configurável por tenant
-- **Autenticação**: JWT Bearer Token
-- **Formato**: JSON
-- **Multitenancy**: Suporte completo
-
-## 🚀 Como Executar
-
-1. Instalar dependências:
+### 1. Instalar Dependências
 ```bash
 flutter pub get
 ```
 
-2. Executar o app:
+### 2. Configurar Ambiente
+O app detecta automaticamente o ambiente:
+- **Debug**: `http://127.0.0.1:8080/api/portal`
+- **Produção**: `https://production.soulclinic.com.br/api/portal`
+
+### 3. Executar o Aplicativo
 ```bash
 flutter run
 ```
 
-## 📋 TODO
+## 📱 Navegação
 
-- [ ] Implementar carteira de vacinação
-- [ ] Implementar documentos
-- [ ] Implementar mensagens
-- [ ] Implementar notificações push
-- [ ] Implementar contas a pagar
-- [ ] Adicionar testes unitários
-- [ ] Implementar upload de foto
-- [ ] Adicionar validação de CPF
-- [ ] Implementar recuperação de senha
+### Bottom Navigation Bar
+- **Dashboard** - Tela principal com cards de acesso
+- **Agendamentos** - Gestão de consultas
+- **Vacinas** - Carteira de vacinação
+- **Mensagens** - Sistema de mensagens
+- **Perfil** - Dados pessoais
+
+### Cards de Acesso Rápido
+- Agendamentos
+- Carteira de Vacinação
+- Documentos
+- Mensagens
+- Notificações
+- Contas a Pagar
+- Perfil
+- Configurações
+
+## 🔌 Integração com API
+
+### Endpoints Utilizados
+- **Autenticação**: `/auth/login`, `/auth/forgot-password`, `/auth/change-password`
+- **Dashboard**: `/dashboard`
+- **Agendamentos**: `/agendamentos`
+- **Vacinas**: `/carteira-vacinacao`
+- **Documentos**: `/documentos`
+- **Mensagens**: `/mensagens`
+- **Notificações**: `/notificacoes`
+- **Contas**: `/contas-pagar`
+- **Configurações**: `/configuracoes`
+- **Perfil**: `/perfil`
+
+### Autenticação JWT
+- Token de acesso (7 dias)
+- Refresh token (30 dias)
+- Headers automáticos
+- Renovação automática
+
+## 🎨 Design
+
+### Material Design 3
+- Tema personalizado por tenant
+- Cores dinâmicas baseadas na clínica
+- Cards com elevação
+- Ícones intuitivos
+- Navegação fluida
+
+### Responsividade
+- Layout adaptável
+- Grid responsivo
+- Scroll otimizado
+- Feedback visual
+
+## 🚀 Funcionalidades Avançadas
+
+### Multitenancy
+- Detecção automática de tenant
+- Configurações por clínica
+- URLs dinâmicas
+- Temas personalizados
+
+### Debug e Desenvolvimento
+- Banner de ambiente
+- Logs detalhados
+- Tela de debug de clientes
+- Tela de debug de API
+
+### Validações
+- CPF com máscara e validação
+- Validação de formulários
+- Mensagens de erro claras
+- Feedback visual
+
+## 📋 Status da Implementação
+
+- ✅ **100%** - Autenticação e segurança
+- ✅ **100%** - Dashboard e navegação
+- ✅ **100%** - Agendamentos
+- ✅ **100%** - Carteira de vacinação
+- ✅ **100%** - Documentos
+- ✅ **100%** - Mensagens
+- ✅ **100%** - Notificações
+- ✅ **100%** - Contas a pagar
+- ✅ **100%** - Perfil e configurações
+
+## 🔧 Desenvolvimento
+
+### Dependências Principais
+- `flutter_bloc` - Gerenciamento de estado
+- `dio` - Cliente HTTP
+- `shared_preferences` - Armazenamento local
+- `url_launcher` - Abertura de URLs
+- `intl` - Formatação de datas
+
+### Comandos Úteis
+```bash
+# Executar em modo debug
+flutter run --debug
+
+# Ver logs
+flutter logs
+
+# Limpar cache
+flutter clean && flutter pub get
+
+# Análise de código
+flutter analyze
+```
+
+## 📞 Suporte
+
+Para dúvidas ou problemas:
+- Verificar logs do Flutter
+- Testar conectividade com a API
+- Validar configurações de ambiente
+- Consultar documentação da API
 
 ## 👨‍💻 Desenvolvedor
 

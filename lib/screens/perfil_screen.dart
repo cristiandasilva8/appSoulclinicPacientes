@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import '../config/app_config.dart';
 import '../services/auth_bloc.dart';
 import '../services/dashboard_service.dart';
+import '../services/perfil_service.dart';
 import '../models/user.dart';
 
 class PerfilScreen extends StatefulWidget {
@@ -40,28 +41,98 @@ class _PerfilScreenState extends State<PerfilScreen> {
   }
 
   Future<void> _loadPerfil() async {
+    print('🔍 Iniciando carregamento do perfil...');
     setState(() {
       _isLoading = true;
       _error = null;
     });
 
     try {
+      print('📡 Fazendo requisição ao serviço de perfil...');
       final response = await _perfilService.getPerfil();
+      print('📡 Resposta recebida: success=${response.success}, message=${response.message}');
+      print('📡 Response.data é null? ${response.data == null}');
+      
       if (response.success && response.data != null) {
-        setState(() {
-          _user = response.data!;
-          _nomeController.text = _user!.nome;
-          _telefoneController.text = _user!.telefone ?? '';
-          _celularController.text = _user!.celular ?? '';
-          _isLoading = false;
-        });
+        try {
+          print('🔍 Dados do perfil recebidos: ${response.data}');
+          print('🔍 Tipo de response.data: ${response.data.runtimeType}');
+          print('🔍 response.data é User? ${response.data is User}');
+          
+          // Usar os dados diretamente do response.data (que já é um User)
+          final user = response.data!;
+          print('✅ User criado: id=${user.id}, nome=${user.nome}, email=${user.email}');
+          
+          setState(() {
+            _user = user;
+            _nomeController.text = user.nome;
+            _telefoneController.text = user.telefone ?? '';
+            _celularController.text = user.celular ?? '';
+            _isLoading = false;
+          });
+          
+          print('✅ Perfil carregado com sucesso');
+        } catch (parseError, stackTrace) {
+          print('❌ Erro ao processar dados do perfil: $parseError');
+          print('❌ Stack trace: $stackTrace');
+          setState(() {
+            _error = 'Erro ao processar dados do perfil: ${parseError.toString()}';
+            _isLoading = false;
+          });
+        }
       } else {
+        print('❌ Resposta não foi bem-sucedida ou dados são null');
+        print('❌ Success: ${response.success}');
+        print('❌ Message: ${response.message}');
+        print('❌ Errors: ${response.errors}');
+        
+        // Verificar se é erro de autenticação (token expirado)
+        final errorMessage = response.message.toLowerCase();
+        if (errorMessage.contains('token inválido') || 
+            errorMessage.contains('token expirado') ||
+            errorMessage.contains('401')) {
+          // Token expirado - redirecionar para login
+          if (mounted) {
+            context.read<AuthBloc>().add(LogoutRequested());
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Sessão expirada. Por favor, faça login novamente.'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+          }
+          return;
+        }
+        
         setState(() {
-          _error = response.message;
+          _error = response.message.isNotEmpty 
+              ? response.message 
+              : 'Erro ao carregar perfil. Verifique sua conexão.';
           _isLoading = false;
         });
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print('💥 Erro geral ao carregar perfil: $e');
+      print('💥 Stack trace: $stackTrace');
+      
+      // Verificar se é erro de autenticação (token expirado)
+      final errorMessage = e.toString().toLowerCase();
+      if (errorMessage.contains('token inválido') || 
+          errorMessage.contains('token expirado') ||
+          errorMessage.contains('401')) {
+        // Token expirado - redirecionar para login
+        if (mounted) {
+          context.read<AuthBloc>().add(LogoutRequested());
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Sessão expirada. Por favor, faça login novamente.'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        return;
+      }
+      
       setState(() {
         _error = 'Erro ao carregar perfil: ${e.toString()}';
         _isLoading = false;
@@ -86,20 +157,17 @@ class _PerfilScreenState extends State<PerfilScreen> {
                 });
               },
             ),
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadPerfil,
+          ),
         ],
       ),
-      body: BlocBuilder<AuthBloc, AuthState>(
-        builder: (context, state) {
-          if (state is AuthAuthenticated) {
-            return _buildPerfilContent(state.user);
-          }
-          return const Center(child: CircularProgressIndicator());
-        },
-      ),
+      body: _buildPerfilContent(),
     );
   }
 
-  Widget _buildPerfilContent(user) {
+  Widget _buildPerfilContent() {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -154,6 +222,10 @@ class _PerfilScreenState extends State<PerfilScreen> {
 
             // Preferências
             if (_user!.preferencias != null) _buildPreferencias(),
+            const SizedBox(height: 24),
+
+            // Exclusão de conta
+            _buildExclusaoConta(),
             const SizedBox(height: 24),
 
             // Botões de ação
@@ -459,6 +531,88 @@ class _PerfilScreenState extends State<PerfilScreen> {
     );
   }
 
+  Widget _buildExclusaoConta() {
+    return Card(
+      elevation: AppConfig.elevation,
+      color: Colors.red[50],
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.delete_forever, color: Colors.red[700], size: 24),
+                const SizedBox(width: 12),
+                Text(
+                  'Exclusão de Conta',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.red[700],
+                      ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.orange[50],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.orange[200]!),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.info_outline, color: Colors.orange[700], size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Esta funcionalidade está em desenvolvimento',
+                      style: TextStyle(
+                        color: Colors.orange[900],
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Ao excluir sua conta, todos os seus dados serão removidos permanentemente. Esta ação não pode ser desfeita.',
+              style: TextStyle(
+                color: Colors.grey[700],
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Funcionalidade de exclusão de conta em desenvolvimento'),
+                      backgroundColor: Colors.orange,
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.delete_forever),
+                label: const Text('Solicitar Exclusão de Conta'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.red[700],
+                  side: BorderSide(color: Colors.red[300]!),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildBotoesAcao() {
     return Row(
       children: [
@@ -547,16 +701,16 @@ class _PerfilScreenState extends State<PerfilScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     try {
-      final response = await _perfilService.atualizarPerfil(
-        nome: _nomeController.text.trim(),
-        telefone: _telefoneController.text.trim().isEmpty 
+      final response = await _perfilService.atualizarPerfil({
+        'nome': _nomeController.text.trim(),
+        'telefone': _telefoneController.text.trim().isEmpty 
             ? null 
             : _telefoneController.text.trim(),
-        celular: _celularController.text.trim().isEmpty 
+        'celular': _celularController.text.trim().isEmpty 
             ? null 
             : _celularController.text.trim(),
-        preferencias: _user!.preferencias,
-      );
+        'preferencias': _user!.preferencias?.toJson(),
+      });
 
       if (response.success) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -570,6 +724,22 @@ class _PerfilScreenState extends State<PerfilScreen> {
         });
         _loadPerfil();
       } else {
+        // Verificar se é erro de autenticação (token expirado)
+        final errorMessage = response.message.toLowerCase();
+        if (errorMessage.contains('token inválido') || 
+            errorMessage.contains('token expirado') ||
+            errorMessage.contains('401')) {
+          // Token expirado - redirecionar para login
+          context.read<AuthBloc>().add(LogoutRequested());
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Sessão expirada. Por favor, faça login novamente.'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+          return;
+        }
+        
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(response.message),
@@ -578,6 +748,24 @@ class _PerfilScreenState extends State<PerfilScreen> {
         );
       }
     } catch (e) {
+      // Verificar se é erro de autenticação (token expirado)
+      final errorMessage = e.toString().toLowerCase();
+      if (errorMessage.contains('token inválido') || 
+          errorMessage.contains('token expirado') ||
+          errorMessage.contains('401')) {
+        // Token expirado - redirecionar para login
+        if (mounted) {
+          context.read<AuthBloc>().add(LogoutRequested());
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Sessão expirada. Por favor, faça login novamente.'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        return;
+      }
+      
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Erro ao atualizar perfil: ${e.toString()}'),

@@ -1,3 +1,5 @@
+import '../utils/json_utils.dart';
+
 class Agendamento {
   final int id;
   final String data;
@@ -29,21 +31,39 @@ class Agendamento {
 
   factory Agendamento.fromJson(Map<String, dynamic> json) {
     return Agendamento(
-      id: json['id'],
-      data: json['data'],
-      hora: json['hora'],
-      tipo: json['tipo'],
-      profissional: json['profissional'],
-      unidade: json['unidade'],
-      sala: json['sala'],
-      status: json['status'],
-      observacoes: json['observacoes'],
-      protocolo: json['protocolo'],
-      createdAt: DateTime.parse(json['created_at']),
+      id: JsonUtils.safeInt(json['id']),
+      data: JsonUtils.safeString(json['data']),
+      hora: JsonUtils.safeString(json['hora']),
+      tipo: JsonUtils.safeString(json['tipo']),
+      profissional: _extractProfissionalName(json['profissional']),
+      unidade: _extractUnidadeName(json['unidade']),
+      sala: JsonUtils.safeStringNullable(json['sala']),
+      status: JsonUtils.safeString(json['status']),
+      observacoes: JsonUtils.safeStringNullable(json['observacoes']),
+      protocolo: JsonUtils.safeStringNullable(json['protocolo']),
+      createdAt: JsonUtils.safeDateTime(json['created_at']),
       updatedAt: json['updated_at'] != null 
-          ? DateTime.parse(json['updated_at']) 
+          ? JsonUtils.safeDateTime(json['updated_at']) 
           : null,
     );
+  }
+
+  static String _extractProfissionalName(dynamic profissional) {
+    if (profissional == null) return '';
+    if (profissional is String) return profissional;
+    if (profissional is Map) {
+      return JsonUtils.safeString(profissional['nome']);
+    }
+    return '';
+  }
+
+  static String _extractUnidadeName(dynamic unidade) {
+    if (unidade == null) return '';
+    if (unidade is String) return unidade;
+    if (unidade is Map) {
+      return JsonUtils.safeString(unidade['nome']);
+    }
+    return '';
   }
 
   Map<String, dynamic> toJson() {
@@ -63,9 +83,16 @@ class Agendamento {
     };
   }
 
-  bool get isConfirmado => status == 'confirmado';
-  bool get isPendente => status == 'pendente';
-  bool get isCancelado => status == 'cancelado';
+  bool get isAberto => status == 'aberto';
+  bool get isEmAndamento => status == 'em_andamento';
+  bool get isFinalizado => status == 'finalizado';
+  bool get isNaoCompareceu => status == 'nao_compareceu';
+  bool get isCanceladoPaciente => status == 'cancelado_paciente';
+  bool get isCanceladoProfissional => status == 'cancelado_profissional';
+  bool get isFaltaJustificada => status == 'falta_justificada';
+  bool get isPedidoReserva => status == 'pedido_reserva';
+  bool get isPacote => status == 'pacote';
+  bool get isCancelado => isCanceladoPaciente || isCanceladoProfissional;
 }
 
 class AgendamentoDetalhes extends Agendamento {
@@ -91,23 +118,45 @@ class AgendamentoDetalhes extends Agendamento {
 
   factory AgendamentoDetalhes.fromJson(Map<String, dynamic> json) {
     return AgendamentoDetalhes(
-      id: json['id'],
-      data: json['data'],
-      hora: json['hora'],
-      tipo: json['tipo'],
-      profissional: json['profissional']['nome'],
-      unidade: json['unidade']['nome'],
-      sala: json['sala'],
-      status: json['status'],
-      observacoes: json['observacoes'],
-      protocolo: json['protocolo'],
-      createdAt: DateTime.parse(json['created_at']),
+      id: JsonUtils.safeInt(json['id']),
+      data: JsonUtils.safeString(json['data']),
+      hora: JsonUtils.safeString(json['hora']),
+      tipo: JsonUtils.safeString(json['tipo']),
+      profissional: _extractProfissionalName(json['profissional']),
+      unidade: _extractUnidadeName(json['unidade']),
+      sala: JsonUtils.safeStringNullable(json['sala']),
+      status: JsonUtils.safeString(json['status']),
+      observacoes: JsonUtils.safeStringNullable(json['observacoes']),
+      protocolo: JsonUtils.safeStringNullable(json['protocolo']),
+      createdAt: JsonUtils.safeDateTime(json['created_at']),
       updatedAt: json['updated_at'] != null 
-          ? DateTime.parse(json['updated_at']) 
+          ? JsonUtils.safeDateTime(json['updated_at']) 
           : null,
-      profissionalDetalhes: ProfissionalDetalhes.fromJson(json['profissional']),
-      unidadeDetalhes: UnidadeDetalhes.fromJson(json['unidade']),
+      profissionalDetalhes: json['profissional'] != null
+          ? ProfissionalDetalhes.fromJson(json['profissional'])
+          : ProfissionalDetalhes(id: 0, nome: '', especialidade: 'Não informado', crm: 'Não informado'),
+      unidadeDetalhes: json['unidade'] != null
+          ? UnidadeDetalhes.fromJson(json['unidade'])
+          : UnidadeDetalhes(id: 0, nome: '', endereco: 'Não informado', telefone: 'Não informado'),
     );
+  }
+
+  static String _extractProfissionalName(dynamic profissional) {
+    if (profissional == null) return '';
+    if (profissional is String) return profissional;
+    if (profissional is Map) {
+      return JsonUtils.safeString(profissional['nome']);
+    }
+    return '';
+  }
+
+  static String _extractUnidadeName(dynamic unidade) {
+    if (unidade == null) return '';
+    if (unidade is String) return unidade;
+    if (unidade is Map) {
+      return JsonUtils.safeString(unidade['nome']);
+    }
+    return '';
   }
 }
 
@@ -126,10 +175,10 @@ class ProfissionalDetalhes {
 
   factory ProfissionalDetalhes.fromJson(Map<String, dynamic> json) {
     return ProfissionalDetalhes(
-      id: json['id'],
-      nome: json['nome'],
-      especialidade: json['especialidade'],
-      crm: json['crm'],
+      id: JsonUtils.safeInt(json['id']),
+      nome: JsonUtils.safeString(json['nome']),
+      especialidade: JsonUtils.safeString(json['especialidade'], defaultValue: 'Não informado'),
+      crm: JsonUtils.safeString(json['crm'], defaultValue: 'Não informado'),
     );
   }
 }
@@ -149,10 +198,10 @@ class UnidadeDetalhes {
 
   factory UnidadeDetalhes.fromJson(Map<String, dynamic> json) {
     return UnidadeDetalhes(
-      id: json['id'],
-      nome: json['nome'],
-      endereco: json['endereco'],
-      telefone: json['telefone'],
+      id: JsonUtils.safeInt(json['id']),
+      nome: JsonUtils.safeString(json['nome']),
+      endereco: JsonUtils.safeString(json['endereco'], defaultValue: 'Não informado'),
+      telefone: JsonUtils.safeString(json['telefone'], defaultValue: 'Não informado'),
     );
   }
 }

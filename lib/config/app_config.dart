@@ -4,7 +4,7 @@ class AppConfig {
   
   // URLs baseadas no ambiente
   static const String _baseUrlProducao = 'https://production.soulclinic.com.br/api/portal';
-  static const String _baseUrlHomologacao = 'http://localhost:8080/api/portal';
+  static const String _baseUrlHomologacao = 'http://127.0.0.1:8080/api/portal';
   
   // Configurações de Multitenancy
   static const Map<String, TenantConfig> tenants = {
@@ -27,7 +27,7 @@ class AppConfig {
   // Configuração da clínica atual (detectada automaticamente)
   static String _currentTenant = 'soulclinic'; // Default
   
-  // Detectar clínica baseada no domínio do CRM
+  // Detectar clínica baseada no ambiente
   static String detectTenantFromCrm() {
     // Em produção, isso seria baseado no domínio atual ou configuração do servidor
     // Por enquanto, vamos usar uma configuração fixa ou detectar via ambiente

@@ -1,4 +1,5 @@
 import 'user.dart';
+import '../utils/json_utils.dart';
 
 class Vacina {
   final int id;
@@ -31,26 +32,18 @@ class Vacina {
 
   factory Vacina.fromJson(Map<String, dynamic> json) {
     return Vacina(
-      id: json['id'],
-      nome: json['nome'],
-      dose: json['dose'],
-      dataAplicacao: json['data_aplicacao'],
-      dataProximaDose: json['data_proxima_dose'],
-      status: json['status'],
-      lote: json['lote'],
-      aplicador: json['aplicador'],
-      unidade: json['unidade'],
-      observacoes: json['observacoes'],
-      reacoesAdversas: json['reacoes_adversas'] != null
-          ? (json['reacoes_adversas'] as List)
-              .map((e) => ReacaoAdversa.fromJson(e))
-              .toList()
-          : [],
-      documentos: json['documentos'] != null
-          ? (json['documentos'] as List)
-              .map((e) => DocumentoVacina.fromJson(e))
-              .toList()
-          : [],
+      id: JsonUtils.safeInt(json['id']),
+      nome: JsonUtils.safeString(json['nome']),
+      dose: JsonUtils.safeString(json['dose']),
+      dataAplicacao: JsonUtils.safeString(json['data_aplicacao']),
+      dataProximaDose: JsonUtils.safeStringNullable(json['data_proxima_dose']),
+      status: JsonUtils.safeString(json['status']),
+      lote: JsonUtils.safeStringNullable(json['lote']),
+      aplicador: JsonUtils.safeStringNullable(json['aplicador']),
+      unidade: JsonUtils.safeStringNullable(json['unidade']),
+      observacoes: JsonUtils.safeStringNullable(json['observacoes']),
+      reacoesAdversas: JsonUtils.safeList(json['reacoes_adversas'], (e) => ReacaoAdversa.fromJson(e)),
+      documentos: JsonUtils.safeList(json['documentos'], (e) => DocumentoVacina.fromJson(e)),
     );
   }
 
@@ -93,11 +86,11 @@ class ReacaoAdversa {
 
   factory ReacaoAdversa.fromJson(Map<String, dynamic> json) {
     return ReacaoAdversa(
-      id: json['id'],
-      descricao: json['descricao'],
-      intensidade: json['intensidade'],
-      dataInicio: json['data_inicio'],
-      dataFim: json['data_fim'],
+      id: JsonUtils.safeInt(json['id']),
+      descricao: JsonUtils.safeString(json['descricao']),
+      intensidade: JsonUtils.safeString(json['intensidade']),
+      dataInicio: JsonUtils.safeString(json['data_inicio']),
+      dataFim: JsonUtils.safeStringNullable(json['data_fim']),
     );
   }
 
@@ -125,9 +118,9 @@ class DocumentoVacina {
 
   factory DocumentoVacina.fromJson(Map<String, dynamic> json) {
     return DocumentoVacina(
-      id: json['id'],
-      nome: json['nome'],
-      url: json['url'],
+      id: JsonUtils.safeInt(json['id']),
+      nome: JsonUtils.safeString(json['nome']),
+      url: JsonUtils.safeString(json['url']),
     );
   }
 
@@ -154,9 +147,7 @@ class CarteiraVacinacao {
   factory CarteiraVacinacao.fromJson(Map<String, dynamic> json) {
     return CarteiraVacinacao(
       paciente: User.fromJson(json['paciente']),
-      vacinas: (json['vacinas'] as List)
-          .map((e) => Vacina.fromJson(e))
-          .toList(),
+      vacinas: JsonUtils.safeList(json['vacinas'], (e) => Vacina.fromJson(e)),
       estatisticas: EstatisticasVacina.fromJson(json['estatisticas']),
     );
   }
@@ -175,9 +166,9 @@ class EstatisticasVacina {
 
   factory EstatisticasVacina.fromJson(Map<String, dynamic> json) {
     return EstatisticasVacina(
-      totalVacinas: json['total_vacinas'],
-      vacinasPendentes: json['vacinas_pendentes'],
-      vacinasAtrasadas: json['vacinas_atrasadas'],
+      totalVacinas: JsonUtils.safeInt(json['total_vacinas']),
+      vacinasPendentes: JsonUtils.safeInt(json['vacinas_pendentes']),
+      vacinasAtrasadas: JsonUtils.safeInt(json['vacinas_atrasadas'] ?? json['vacinas_aplicadas']), // Tenta vacinas_atrasadas primeiro, depois vacinas_aplicadas
     );
   }
 }

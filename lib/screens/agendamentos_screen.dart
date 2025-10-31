@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../config/app_config.dart';
 import '../services/dashboard_service.dart';
+import '../services/agendamentos_service.dart';
 import '../models/agendamento.dart';
 
 class AgendamentosScreen extends StatefulWidget {
@@ -35,10 +36,41 @@ class _AgendamentosScreenState extends State<AgendamentosScreen> {
       );
       
       if (response.success && response.data != null) {
-        setState(() {
-          _agendamentos = response.data!.agendamentos;
-          _isLoading = false;
-        });
+        try {
+          // Tentar diferentes estruturas de dados que a API pode retornar
+          List<dynamic> agendamentosData = [];
+          
+          if (response.data!['agendamentos'] is List) {
+            agendamentosData = response.data!['agendamentos'];
+          } else if (response.data!['data'] is List) {
+            agendamentosData = response.data!['data'];
+          } else if (response.data! is List) {
+            agendamentosData = response.data! as List<dynamic>;
+          } else {
+            print('Estrutura de dados não reconhecida: ${response.data}');
+            setState(() {
+              _error = 'Formato de dados inválido. Tente novamente.';
+              _isLoading = false;
+            });
+            return;
+          }
+          
+          setState(() {
+            _agendamentos = agendamentosData
+                .map((e) => Agendamento.fromJson(e))
+                .toList();
+            _isLoading = false;
+          });
+          
+          print('✅ ${_agendamentos.length} agendamentos carregados com sucesso');
+        } catch (parseError) {
+          print('❌ Erro ao processar dados dos agendamentos: $parseError');
+          print('📄 Dados recebidos: ${response.data}');
+          setState(() {
+            _error = 'Erro ao processar dados dos agendamentos. Tente novamente.';
+            _isLoading = false;
+          });
+        }
       } else {
         setState(() {
           _error = response.message;
@@ -46,8 +78,9 @@ class _AgendamentosScreenState extends State<AgendamentosScreen> {
         });
       }
     } catch (e) {
+      print('Erro ao carregar agendamentos: $e');
       setState(() {
-        _error = 'Erro ao carregar agendamentos: ${e.toString()}';
+        _error = 'Erro ao carregar agendamentos. Verifique sua conexão e tente novamente.';
         _isLoading = false;
       });
     }
@@ -72,43 +105,63 @@ class _AgendamentosScreenState extends State<AgendamentosScreen> {
           // Filtros
           Container(
             padding: const EdgeInsets.all(16),
-            child: Row(
+            child: Column(
               children: [
-                Expanded(
-                  child: DropdownButtonFormField<String>(
-                    value: _statusFilter,
-                    decoration: const InputDecoration(
-                      labelText: 'Filtrar por status',
-                      border: OutlineInputBorder(),
-                    ),
-                    items: const [
-                      DropdownMenuItem(value: 'todos', child: Text('Todos')),
-                      DropdownMenuItem(value: 'confirmados', child: Text('Confirmados')),
-                      DropdownMenuItem(value: 'pendentes', child: Text('Pendentes')),
-                      DropdownMenuItem(value: 'cancelados', child: Text('Cancelados')),
-                    ],
-                    onChanged: (value) {
-                      if (value != null) {
-                        setState(() {
-                          _statusFilter = value;
-                        });
-                        _loadAgendamentos();
-                      }
-                    },
-                  ),
-                ),
-                const SizedBox(width: 16),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    // TODO: Implementar solicitação de agendamento
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Funcionalidade em desenvolvimento'),
+                Row(
+                  children: [
+                    Expanded(
+                      child: DropdownButtonFormField<String>(
+                        value: _statusFilter,
+                        decoration: const InputDecoration(
+                          labelText: 'Filtrar por status',
+                          border: OutlineInputBorder(),
+                        ),
+                        items: const [
+                          DropdownMenuItem(value: 'todos', child: Text('Todos')),
+                          DropdownMenuItem(value: 'aberto', child: Text('Aberto')),
+                          DropdownMenuItem(value: 'em_andamento', child: Text('Em Andamento')),
+                          DropdownMenuItem(value: 'finalizado', child: Text('Finalizado')),
+                          DropdownMenuItem(value: 'nao_compareceu', child: Text('Não Compareceu')),
+                          DropdownMenuItem(value: 'cancelado_paciente', child: Text('Cancelado pelo Paciente')),
+                          DropdownMenuItem(value: 'cancelado_profissional', child: Text('Cancelado pelo Profissional')),
+                          DropdownMenuItem(value: 'falta_justificada', child: Text('Falta Justificada')),
+                          DropdownMenuItem(value: 'pedido_reserva', child: Text('Pedido de Reserva')),
+                          DropdownMenuItem(value: 'pacote', child: Text('Pacote')),
+                        ],
+                        onChanged: (value) {
+                          if (value != null) {
+                            setState(() {
+                              _statusFilter = value;
+                            });
+                            _loadAgendamentos();
+                          }
+                        },
                       ),
-                    );
-                  },
-                  icon: const Icon(Icons.add),
-                  label: const Text('Solicitar'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          // TODO: Implementar solicitação de agendamento
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Funcionalidade em desenvolvimento'),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.add),
+                        label: const Text('Solicitar Agendamento'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Color(AppConfig.currentTenant.primaryColor),
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -145,9 +198,14 @@ class _AgendamentosScreenState extends State<AgendamentosScreen> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
-            ElevatedButton(
+            ElevatedButton.icon(
               onPressed: _loadAgendamentos,
-              child: const Text('Tentar Novamente'),
+              icon: const Icon(Icons.refresh),
+              label: const Text('Tentar Novamente'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(AppConfig.currentTenant.primaryColor),
+                foregroundColor: Colors.white,
+              ),
             ),
           ],
         ),
@@ -190,14 +248,30 @@ class _AgendamentosScreenState extends State<AgendamentosScreen> {
   Widget _buildAgendamentoCard(Agendamento agendamento) {
     Color statusColor;
     switch (agendamento.status) {
-      case 'confirmado':
-        statusColor = Colors.green;
+      case 'aberto':
+        statusColor = Colors.blue;
         break;
-      case 'pendente':
+      case 'em_andamento':
         statusColor = Colors.orange;
         break;
-      case 'cancelado':
+      case 'finalizado':
+        statusColor = Colors.green;
+        break;
+      case 'nao_compareceu':
         statusColor = Colors.red;
+        break;
+      case 'cancelado_paciente':
+      case 'cancelado_profissional':
+        statusColor = Colors.red;
+        break;
+      case 'falta_justificada':
+        statusColor = Colors.amber;
+        break;
+      case 'pedido_reserva':
+        statusColor = Colors.purple;
+        break;
+      case 'pacote':
+        statusColor = Colors.indigo;
         break;
       default:
         statusColor = Colors.grey;
@@ -407,7 +481,7 @@ class _AgendamentosScreenState extends State<AgendamentosScreen> {
   Future<void> _confirmarCancelamento(int agendamentoId, String motivo) async {
     try {
       final response = await _agendamentosService.cancelarAgendamento(
-        id: agendamentoId,
+        agendamentoId,
         motivo: motivo,
       );
 

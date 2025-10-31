@@ -1,3 +1,5 @@
+import '../utils/json_utils.dart';
+
 class User {
   final int id;
   final String nome;
@@ -5,7 +7,7 @@ class User {
   final String cpf;
   final String? telefone;
   final String? celular;
-  final String dataNascimento;
+  final String? dataNascimento;
   final String sexo;
   final String dbGroup;
   final Endereco? endereco;
@@ -19,7 +21,7 @@ class User {
     required this.cpf,
     this.telefone,
     this.celular,
-    required this.dataNascimento,
+    this.dataNascimento,
     required this.sexo,
     required this.dbGroup,
     this.endereco,
@@ -28,24 +30,87 @@ class User {
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
-    return User(
-      id: json['id'],
-      nome: json['nome'],
-      email: json['email'],
-      cpf: json['cpf'],
-      telefone: json['telefone'],
-      celular: json['celular'],
-      dataNascimento: json['data_nascimento'],
-      sexo: json['sexo'],
-      dbGroup: json['db_group'],
-      endereco: json['endereco'] != null 
-          ? Endereco.fromJson(json['endereco']) 
-          : null,
-      fotoUrl: json['foto_url'],
-      preferencias: json['preferencias'] != null 
-          ? Preferencias.fromJson(json['preferencias']) 
-          : null,
-    );
+    try {
+      print('🔍 User.fromJson recebido: $json');
+      
+      // Validar campos obrigatórios
+      final id = JsonUtils.safeInt(json['id']);
+      final nome = JsonUtils.safeString(json['nome']);
+      final email = JsonUtils.safeString(json['email']);
+      final cpf = JsonUtils.safeString(json['cpf']);
+      final sexo = JsonUtils.safeString(json['genero'] ?? json['sexo']);
+      final dbGroup = JsonUtils.safeString(json['db_group']);
+      
+      if (id == 0) {
+        print('❌ ID do usuário é obrigatório');
+        throw Exception('ID do usuário é obrigatório');
+      }
+      
+      if (nome.isEmpty) {
+        print('❌ Nome do usuário é obrigatório');
+        throw Exception('Nome do usuário é obrigatório');
+      }
+      
+      if (email.isEmpty) {
+        print('❌ Email do usuário é obrigatório');
+        throw Exception('Email do usuário é obrigatório');
+      }
+      
+      if (cpf.isEmpty) {
+        print('❌ CPF do usuário é obrigatório');
+        throw Exception('CPF do usuário é obrigatório');
+      }
+      
+      // Sexo pode ser vazio - usar valor padrão se não vier
+      final finalSexo = sexo.isEmpty ? 'N' : sexo;
+      
+      // DB Group pode ser vazio se não vier da API (usar valor padrão)
+      final finalDbGroup = dbGroup.isEmpty ? 'default' : dbGroup;
+      
+      return User(
+        id: id,
+        nome: nome,
+        email: email,
+        cpf: cpf,
+        telefone: JsonUtils.safeStringNullable(json['telefone']),
+        celular: JsonUtils.safeStringNullable(json['celular']),
+        dataNascimento: JsonUtils.safeStringNullable(json['data_nascimento']),
+        sexo: finalSexo,
+        dbGroup: finalDbGroup,
+        endereco: _buildEnderecoFromPerfil(json),
+        fotoUrl: JsonUtils.safeStringNullable(json['foto']),
+        preferencias: json['preferencias'] != null 
+            ? Preferencias.fromJson(json['preferencias']) 
+            : null,
+      );
+    } catch (e) {
+      print('❌ Erro ao criar User: $e');
+      print('❌ JSON recebido: $json');
+      rethrow;
+    }
+  }
+
+  static Endereco? _buildEnderecoFromPerfil(Map<String, dynamic> json) {
+    final cep = JsonUtils.safeString(json['cep']);
+    final logradouro = JsonUtils.safeString(json['logradouro']);
+    final numero = JsonUtils.safeString(json['numero']);
+    final bairro = JsonUtils.safeString(json['bairro']);
+    final cidade = JsonUtils.safeString(json['cidade']);
+    final uf = JsonUtils.safeString(json['uf']);
+    
+    // Só cria endereço se tiver pelo menos alguns dados
+    if (cep.isNotEmpty || logradouro.isNotEmpty || cidade.isNotEmpty) {
+      return Endereco(
+        cep: cep,
+        logradouro: logradouro,
+        numero: numero,
+        complemento: JsonUtils.safeStringNullable(json['complemento']),
+        bairro: bairro,
+        cidade: cidade,
+        estado: uf,
+      );
+    }
+    return null;
   }
 
   Map<String, dynamic> toJson() {
@@ -117,13 +182,13 @@ class Endereco {
 
   factory Endereco.fromJson(Map<String, dynamic> json) {
     return Endereco(
-      cep: json['cep'],
-      logradouro: json['logradouro'],
-      numero: json['numero'],
-      complemento: json['complemento'],
-      bairro: json['bairro'],
-      cidade: json['cidade'],
-      estado: json['estado'],
+      cep: JsonUtils.safeString(json['cep']),
+      logradouro: JsonUtils.safeString(json['logradouro']),
+      numero: JsonUtils.safeString(json['numero']),
+      complemento: JsonUtils.safeStringNullable(json['complemento']),
+      bairro: JsonUtils.safeString(json['bairro']),
+      cidade: JsonUtils.safeString(json['cidade']),
+      estado: JsonUtils.safeString(json['estado']),
     );
   }
 
@@ -177,5 +242,143 @@ class Preferencias {
       notificacoesSms: notificacoesSms ?? this.notificacoesSms,
       notificacoesPush: notificacoesPush ?? this.notificacoesPush,
     );
+  }
+}
+
+// Classes para resposta de login
+class LoginResponse {
+  final String token;
+  final String refreshToken;
+  final User user;
+
+  LoginResponse({
+    required this.token,
+    required this.refreshToken,
+    required this.user,
+  });
+
+  factory LoginResponse.fromJson(Map<String, dynamic> json) {
+    return LoginResponse(
+      token: json['token'],
+      refreshToken: json['refresh_token'],
+      user: User.fromJson(json['user']),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'token': token,
+      'refresh_token': refreshToken,
+      'user': user.toJson(),
+    };
+  }
+}
+
+class RefreshTokenResponse {
+  final String token;
+  final String refreshToken;
+
+  RefreshTokenResponse({
+    required this.token,
+    required this.refreshToken,
+  });
+
+  factory RefreshTokenResponse.fromJson(Map<String, dynamic> json) {
+    return RefreshTokenResponse(
+      token: json['token'],
+      refreshToken: json['refresh_token'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'token': token,
+      'refresh_token': refreshToken,
+    };
+  }
+}
+
+class RefreshTokenRequest {
+  final String refreshToken;
+
+  RefreshTokenRequest({required this.refreshToken});
+
+  Map<String, dynamic> toJson() {
+    return {
+      'refresh_token': refreshToken,
+    };
+  }
+}
+
+class VerificarCpfResponse {
+  final bool existe;
+  final User? paciente;
+
+  VerificarCpfResponse({
+    required this.existe,
+    this.paciente,
+  });
+
+  factory VerificarCpfResponse.fromJson(Map<String, dynamic> json) {
+    return VerificarCpfResponse(
+      existe: json['existe'] ?? false,
+      paciente: json['paciente'] != null ? User.fromJson(json['paciente']) : null,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'existe': existe,
+      'paciente': paciente?.toJson(),
+    };
+  }
+}
+
+class VerificarCpfRequest {
+  final String cpf;
+  final String dbGroup;
+
+  VerificarCpfRequest({
+    required this.cpf,
+    required this.dbGroup,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'cpf': cpf,
+      'db_group': dbGroup,
+    };
+  }
+}
+
+class ResetPasswordResponse {
+  final bool emailEnviado;
+  final String? emailErro;
+  final String? pacienteEmail;
+  final String? pacienteNome;
+
+  ResetPasswordResponse({
+    required this.emailEnviado,
+    this.emailErro,
+    this.pacienteEmail,
+    this.pacienteNome,
+  });
+
+  factory ResetPasswordResponse.fromJson(Map<String, dynamic> json) {
+    return ResetPasswordResponse(
+      emailEnviado: json['email_enviado'] ?? false,
+      emailErro: json['email_erro'],
+      pacienteEmail: json['paciente_email'],
+      pacienteNome: json['paciente_nome'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'email_enviado': emailEnviado,
+      'email_erro': emailErro,
+      'paciente_email': pacienteEmail,
+      'paciente_nome': pacienteNome,
+    };
   }
 }

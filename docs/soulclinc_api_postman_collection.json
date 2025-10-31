@@ -1,0 +1,2049 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "name": "SoulClinc API - Multitenant Completo",
+    "description": "Coleção oficial da API SoulClinc Multitenant, incluindo API Interna (JWT), API Externa (Token) e Portal do Paciente. Organizada por recursos e exemplos de uso de todos os filtros.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "API Interna (JWT)",
+      "item": [
+        {
+          "name": "Utilitários",
+          "item": [
+            {
+              "name": "Login (JWT)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{usuario_email}}\",\n  \"senha\": \"{{usuario_senha}}\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/v1/auth/login",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "auth", "login"]
+                }
+              },
+              "description": "Autentica usuário e retorna JWT. Use o token retornado como Bearer nos demais endpoints."
+            },
+            {
+              "name": "Health Check (Interno)",
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{base_url}}/api/v1/health",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "health"]
+                }
+              },
+              "description": "Verifica se a API interna está ativa. Responde status customizado conforme ativação/desativação."
+            },
+            {
+              "name": "Exemplo Rate Limit Excedido",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/v1/pacientes",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "pacientes"]
+                }
+              },
+              "description": "Exemplo de resposta ao exceder o limite de requisições (rate limit)."
+            },
+            {
+              "name": "Exemplo CORS Bloqueado",
+              "request": {
+                "method": "OPTIONS",
+                "url": {
+                  "raw": "{{base_url}}/api/v1/pacientes",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "pacientes"]
+                }
+              },
+              "description": "Exemplo de resposta quando a origem não é permitida pelo CORS."
+            },
+            {
+              "name": "Exemplo Erro de Autenticação",
+              "request": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{base_url}}/api/v1/pacientes",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "pacientes"]
+                }
+              },
+              "description": "Exemplo de resposta ao acessar endpoint protegido sem autenticação."
+            }
+          ]
+        },
+        {
+          "name": "CRUD Completo",
+          "item": [
+            {
+              "name": "Pacientes",
+              "item": [
+                {
+                  "name": "Listar todos",
+                  "request": {
+                    "method": "GET",
+                    "header": [{ "key": "Authorization", "value": "Bearer {{jwt_token}}" }],
+                    "url": { "raw": "{{base_url}}/api/v1/pacientes", "host": ["{{base_url}}"], "path": ["api", "v1", "pacientes"] }
+                  },
+                  "description": "Lista todos os pacientes do banco do cliente autenticado."
+                },
+                {
+                  "name": "Listar por id",
+                  "request": {
+                    "method": "GET",
+                    "header": [{ "key": "Authorization", "value": "Bearer {{jwt_token}}" }],
+                    "url": { "raw": "{{base_url}}/api/v1/pacientes?id=1", "host": ["{{base_url}}"], "path": ["api", "v1", "pacientes"], "query": [{"key": "id", "value": "1"}] }
+                  },
+                  "description": "Lista paciente pelo id."
+                },
+                {
+                  "name": "Listar por cpf",
+                  "request": {
+                    "method": "GET",
+                    "header": [{ "key": "Authorization", "value": "Bearer {{jwt_token}}" }],
+                    "url": { "raw": "{{base_url}}/api/v1/pacientes?cpf=000.000.000-00", "host": ["{{base_url}}"], "path": ["api", "v1", "pacientes"], "query": [{"key": "cpf", "value": "000.000.000-00"}] }
+                  },
+                  "description": "Lista paciente pelo CPF."
+                },
+                {
+                  "name": "Listar por ativo",
+                  "request": {
+                    "method": "GET",
+                    "header": [{ "key": "Authorization", "value": "Bearer {{jwt_token}}" }],
+                    "url": { "raw": "{{base_url}}/api/v1/pacientes?ativo=true", "host": ["{{base_url}}"], "path": ["api", "v1", "pacientes"], "query": [{"key": "ativo", "value": "true"}] }
+                  },
+                  "description": "Lista pacientes filtrando por ativo (true/false)."
+                },
+                {
+                  "name": "Listar por todos os parâmetros",
+                  "request": {
+                    "method": "GET",
+                    "header": [{ "key": "Authorization", "value": "Bearer {{jwt_token}}" }],
+                    "url": { "raw": "{{base_url}}/api/v1/pacientes?id=1&cpf=000.000.000-00&ativo=true", "host": ["{{base_url}}"], "path": ["api", "v1", "pacientes"], "query": [
+                      {"key": "id", "value": "1"},
+                      {"key": "cpf", "value": "000.000.000-00"},
+                      {"key": "ativo", "value": "true"}
+                    ] }
+                  },
+                  "description": "Lista pacientes usando todos os filtros combinados."
+                }
+              ]
+            },
+            {
+              "name": "Agendas",
+              "item": [
+                {
+                  "name": "Listar agendas (todos os filtros)",
+                  "request": {
+                    "method": "GET",
+                    "header": [{ "key": "Authorization", "value": "Bearer {{jwt_token}}" }],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/agendas?profissional_id=2&paciente_id=1&data_inicio=2024-07-10&data_fim=2024-07-20&status=aberto&unidade_atendimento_id=1",
+                      "host": ["{{base_url}}"],
+                      "path": ["api", "v1", "agendas"],
+                      "query": [
+                        {"key": "profissional_id", "value": "2"},
+                        {"key": "paciente_id", "value": "1"},
+                        {"key": "data_inicio", "value": "2024-07-10"},
+                        {"key": "data_fim", "value": "2024-07-20"},
+                        {"key": "status", "value": "aberto"},
+                        {"key": "unidade_atendimento_id", "value": "1"}
+                      ]
+                    }
+                  },
+                  "description": "Lista agendas com todos os filtros possíveis. Você pode filtrar por profissional, paciente, data, status, unidade, etc."
+                },
+                {
+                  "name": "Detalhar agenda por ID",
+                  "request": {
+                    "method": "GET",
+                    "header": [{ "key": "Authorization", "value": "Bearer {{jwt_token}}" }],
+                    "url": { "raw": "{{base_url}}/api/v1/agendas/1", "host": ["{{base_url}}"], "path": ["api", "v1", "agendas", "1"] }
+                  },
+                  "description": "Detalha uma agenda específica pelo ID. Retorna todos os campos da agenda."
+                },
+                {
+                  "name": "Criar agenda (completo)",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      { "key": "Authorization", "value": "Bearer {{jwt_token}}" },
+                      { "key": "Content-Type", "value": "application/json" }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"profissional_id\": 2,\n  \"paciente_id\": 1,\n  \"profissional_adicional_id\": null,\n  \"procedimento_id\": 3,\n  \"procedimento_adicional_id\": null,\n  \"sala_id\": 1,\n  \"unidade_atendimento_id\": 1,\n  \"convenio_id\": 1,\n  \"usuario_iniciou_atendimento\": null,\n  \"usuario_finalizaou_atendimento\": null,\n  \"acompanhante\": \"Nome do acompanhante\",\n  \"tipo_acompanhante_id\": 1,\n  \"sms_enviado\": null,\n  \"whatsapp_enviado\": null,\n  \"email_enviado\": null,\n  \"confirmacao_do_paciente\": false,\n  \"paciente_chegou\": false,\n  \"data_agendamento\": \"2024-07-15\",\n  \"inicio_atendimento\": null,\n  \"fim_atendimento\": null,\n  \"hora_inicio\": \"14:00\",\n  \"hora_fim\": \"15:00\",\n  \"status\": \"aberto\",\n  \"valor_atendimento\": 150.00,\n  \"encaixe\": false,\n  \"preferencial\": false,\n  \"observacao\": \"Observação do agendamento\",\n  \"justificativa\": null,\n  \"prioridade\": null,\n  \"usuario_alteracao\": null,\n  \"sequencia\": 1\n}"
+                    },
+                    "url": { "raw": "{{base_url}}/api/v1/agendas", "host": ["{{base_url}}"], "path": ["api", "v1", "agendas"] }
+                  },
+                  "description": "Cria uma nova agenda preenchendo todos os campos possíveis. Veja a migration para detalhes dos tipos e restrições."
+                },
+                {
+                  "name": "Criar agenda (mínimo obrigatório)",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      { "key": "Authorization", "value": "Bearer {{jwt_token}}" },
+                      { "key": "Content-Type", "value": "application/json" }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"profissional_id\": 2,\n  \"paciente_id\": 1,\n  \"procedimento_id\": 3,\n  \"unidade_atendimento_id\": 1,\n  \"data_agendamento\": \"2024-07-15\",\n  \"hora_inicio\": \"14:00\",\n  \"hora_fim\": \"15:00\",\n  \"status\": \"aberto\"\n}"
+                    },
+                    "url": { "raw": "{{base_url}}/api/v1/agendas", "host": ["{{base_url}}"], "path": ["api", "v1", "agendas"] }
+                  },
+                  "description": "Cria uma agenda apenas com os campos obrigatórios. Os demais campos serão nulos ou padrão."
+                },
+                {
+                  "name": "Atualizar agenda (parcial)",
+                  "request": {
+                    "method": "PUT",
+                    "header": [
+                      { "key": "Authorization", "value": "Bearer {{jwt_token}}" },
+                      { "key": "Content-Type", "value": "application/json" }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"status\": \"finalizado\",\n  \"observacao\": \"Paciente compareceu e foi atendido.\"\n}"
+                    },
+                    "url": { "raw": "{{base_url}}/api/v1/agendas/1", "host": ["{{base_url}}"], "path": ["api", "v1", "agendas", "1"] }
+                  },
+                  "description": "Atualiza parcialmente uma agenda existente pelo ID. Envie apenas os campos que deseja alterar."
+                },
+                {
+                  "name": "Remover agenda (soft delete)",
+                  "request": {
+                    "method": "DELETE",
+                    "header": [{ "key": "Authorization", "value": "Bearer {{jwt_token}}" }],
+                    "url": { "raw": "{{base_url}}/api/v1/agendas/1", "host": ["{{base_url}}"], "path": ["api", "v1", "agendas", "1"] }
+                  },
+                  "description": "Remove (soft delete) uma agenda pelo ID. Não exclui de fato, apenas marca como inativa."
+                },
+                {
+                  "name": "Alterar status da agenda (com justificativa)",
+                  "request": {
+                    "method": "PATCH",
+                    "header": [
+                      { "key": "x-api-token", "value": "{{api_token}}" },
+                      { "key": "Content-Type", "value": "application/json" }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"status\": \"finalizado\",\n  \"justificativa\": \"Paciente compareceu e foi atendido.\"\n}"
+                    },
+                    "url": { "raw": "{{base_url}}/external/v1/agendas/1/status", "host": ["{{base_url}}"], "path": ["external", "v1", "agendas", "1", "status"] },
+                    "response": [
+                      {
+                        "name": "Sucesso",
+                        "originalRequest": {},
+                        "status": "OK",
+                        "code": 200,
+                        "body": "{\n  \"sucesso\": true,\n  \"mensagem\": \"Status da agenda alterado com sucesso\",\n  \"dados\": {\n    \"id\": 1,\n    \"status\": \"finalizado\",\n    \"justificativa\": \"Paciente compareceu e foi atendido.\"\n  },\n  \"timestamp\": \"2025-07-01 15:00:00\"\n}"
+                      },
+                      {
+                        "name": "Erro - justificativa ausente",
+                        "originalRequest": {},
+                        "status": "Unprocessable Entity",
+                        "code": 422,
+                        "body": "{\n  \"sucesso\": false,\n  \"mensagem\": \"Status e justificativa são obrigatórios\",\n  \"erro\": \"status_justificativa_obrigatorios\",\n  \"timestamp\": \"2025-07-01 15:00:00\"\n}"
+                      }
+                    ]
+                  },
+                  "description": "Altera o status da agenda, exigindo justificativa obrigatória."
+                },
+                {
+                  "name": "Atualizar agenda (com justificativa)",
+                  "request": {
+                    "method": "PUT",
+                    "header": [
+                      { "key": "x-api-token", "value": "{{api_token}}" },
+                      { "key": "Content-Type", "value": "application/json" }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"status\": \"remarcado\",\n  \"hora_inicio\": \"15:00\",\n  \"hora_fim\": \"16:00\",\n  \"justificativa\": \"Paciente solicitou alteração de horário.\"\n}"
+                    },
+                    "url": { "raw": "{{base_url}}/external/v1/agendas/1", "host": ["{{base_url}}"], "path": ["external", "v1", "agendas", "1"] },
+                    "response": [
+                      {
+                        "name": "Sucesso",
+                        "originalRequest": {},
+                        "status": "OK",
+                        "code": 200,
+                        "body": "{\n  \"sucesso\": true,\n  \"mensagem\": \"Agenda atualizada com sucesso\",\n  \"dados\": {\n    \"id\": 1,\n    \"status\": \"remarcado\",\n    \"hora_inicio\": \"15:00\",\n    \"hora_fim\": \"16:00\",\n    \"justificativa\": \"Paciente solicitou alteração de horário.\"\n  },\n  \"timestamp\": \"2025-07-01 15:00:00\"\n}"
+                      },
+                      {
+                        "name": "Erro - justificativa ausente",
+                        "originalRequest": {},
+                        "status": "Unprocessable Entity",
+                        "code": 422,
+                        "body": "{\n  \"sucesso\": false,\n  \"mensagem\": \"Justificativa é obrigatória para alteração\",\n  \"erro\": \"justificativa_obrigatoria\",\n  \"timestamp\": \"2025-07-01 15:00:00\"\n}"
+                      }
+                    ]
+                  },
+                  "description": "Atualiza todos os campos da agenda, exigindo justificativa obrigatória."
+                },
+                {
+                  "name": "Remover agenda (soft delete, com justificativa)",
+                  "request": {
+                    "method": "DELETE",
+                    "header": [
+                      { "key": "x-api-token", "value": "{{api_token}}" },
+                      { "key": "Content-Type", "value": "application/json" }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"justificativa\": \"Cancelamento solicitado pelo paciente.\"\n}"
+                    },
+                    "url": { "raw": "{{base_url}}/external/v1/agendas/1", "host": ["{{base_url}}"], "path": ["external", "v1", "agendas", "1"] },
+                    "response": [
+                      {
+                        "name": "Sucesso",
+                        "originalRequest": {},
+                        "status": "OK",
+                        "code": 200,
+                        "body": "{\n  \"sucesso\": true,\n  \"mensagem\": \"Agenda removida com sucesso\",\n  \"timestamp\": \"2025-07-01 15:00:00\"\n}"
+                      },
+                      {
+                        "name": "Erro - justificativa ausente",
+                        "originalRequest": {},
+                        "status": "Unprocessable Entity",
+                        "code": 422,
+                        "body": "{\n  \"sucesso\": false,\n  \"mensagem\": \"Justificativa é obrigatória para remoção\",\n  \"erro\": \"justificativa_obrigatoria\",\n  \"timestamp\": \"2025-07-01 15:00:00\"\n}"
+                      }
+                    ]
+                  },
+                  "description": "Remove (soft delete) uma agenda, exigindo justificativa obrigatória."
+                }
+              ]
+            },
+            {
+              "name": "Unidades de Atendimento",
+              "item": [
+                {
+                  "name": "Listar Unidades",
+                  "request": {
+                    "method": "GET",
+                    "header": [
+                      { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/unidades-atendimento",
+                      "host": [ "{{base_url}}" ],
+                      "path": [ "api", "v1", "unidades-atendimento" ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Buscar Unidade por ID",
+                  "request": {
+                    "method": "GET",
+                    "header": [
+                      { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/unidades-atendimento/1",
+                      "host": [ "{{base_url}}" ],
+                      "path": [ "api", "v1", "unidades-atendimento", "1" ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Criar Unidade",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      { "key": "Authorization", "value": "Bearer {{jwt_token}}" },
+                      { "key": "Content-Type", "value": "application/json" }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"nome\": \"Unidade Nova\",\n  \"cpf_cnpj\": \"12345678000199\",\n  \"cep\": \"12345-678\",\n  \"logradouro\": \"Rua Nova\",\n  \"numero\": \"200\",\n  \"bairro\": \"Bairro Novo\",\n  \"cidade\": \"Cidade Nova\",\n  \"estado\": \"SP\",\n  \"complemento\": \"Prédio B\",\n  \"celular\": \"11988887777\",\n  \"telefone\": \"1144445555\",\n  \"ativo\": true\n}"
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/unidades-atendimento",
+                      "host": [ "{{base_url}}" ],
+                      "path": [ "api", "v1", "unidades-atendimento" ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Editar Unidade",
+                  "request": {
+                    "method": "PUT",
+                    "header": [
+                      { "key": "Authorization", "value": "Bearer {{jwt_token}}" },
+                      { "key": "Content-Type", "value": "application/json" }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"nome\": \"Unidade Editada\",\n  \"cpf_cnpj\": \"12345678000199\",\n  \"cep\": \"12345-678\",\n  \"logradouro\": \"Rua Editada\",\n  \"numero\": \"201\",\n  \"bairro\": \"Bairro Editado\",\n  \"cidade\": \"Cidade Editada\",\n  \"estado\": \"SP\",\n  \"complemento\": \"Prédio C\",\n  \"celular\": \"11988887777\",\n  \"telefone\": \"1144445555\",\n  \"ativo\": true\n}"
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/unidades-atendimento/2",
+                      "host": [ "{{base_url}}" ],
+                      "path": [ "api", "v1", "unidades-atendimento", "2" ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Remover Unidade",
+                  "request": {
+                    "method": "DELETE",
+                    "header": [
+                      { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/unidades-atendimento/2",
+                      "host": [ "{{base_url}}" ],
+                      "path": [ "api", "v1", "unidades-atendimento", "2" ]
+                    }
+                  },
+                  "response": []
+                }
+              ]
+            },
+            {
+              "name": "Convênios",
+              "item": [
+                {
+                  "name": "Listar Convênios",
+                  "request": {
+                    "method": "GET",
+                    "header": [
+                      { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/convenios",
+                      "host": [ "{{base_url}}" ],
+                      "path": [ "api", "v1", "convenios" ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Buscar Convênio por ID",
+                  "request": {
+                    "method": "GET",
+                    "header": [
+                      { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/convenios/1",
+                      "host": [ "{{base_url}}" ],
+                      "path": [ "api", "v1", "convenios", "1" ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Criar Convênio",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      { "key": "Authorization", "value": "Bearer {{jwt_token}}" },
+                      { "key": "Content-Type", "value": "application/json" }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"nome\": \"Convênio Teste\",\n  \"ativo\": true\n}"
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/convenios",
+                      "host": [ "{{base_url}}" ],
+                      "path": [ "api", "v1", "convenios" ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Editar Convênio",
+                  "request": {
+                    "method": "PUT",
+                    "header": [
+                      { "key": "Authorization", "value": "Bearer {{jwt_token}}" },
+                      { "key": "Content-Type", "value": "application/json" }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"nome\": \"Convênio Editado\",\n  \"ativo\": true\n}"
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/convenios/1",
+                      "host": [ "{{base_url}}" ],
+                      "path": [ "api", "v1", "convenios", "1" ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Remover Convênio",
+                  "request": {
+                    "method": "DELETE",
+                    "header": [
+                      { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/convenios/1",
+                      "host": [ "{{base_url}}" ],
+                      "path": [ "api", "v1", "convenios", "1" ]
+                    }
+                  },
+                  "response": []
+                }
+              ]
+            },
+            {
+              "name": "Salas",
+              "item": [
+                {
+                  "name": "Listar Salas",
+                  "request": {
+                    "method": "GET",
+                    "header": [
+                      { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/salas",
+                      "host": [ "{{base_url}}" ],
+                      "path": [ "api", "v1", "salas" ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Buscar Sala por ID",
+                  "request": {
+                    "method": "GET",
+                    "header": [
+                      { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/salas/1",
+                      "host": [ "{{base_url}}" ],
+                      "path": [ "api", "v1", "salas", "1" ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Criar Sala",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      { "key": "Authorization", "value": "Bearer {{jwt_token}}" },
+                      { "key": "Content-Type", "value": "application/json" }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"nome\": \"Sala Teste\",\n  \"ativo\": true\n}"
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/salas",
+                      "host": [ "{{base_url}}" ],
+                      "path": [ "api", "v1", "salas" ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Editar Sala",
+                  "request": {
+                    "method": "PUT",
+                    "header": [
+                      { "key": "Authorization", "value": "Bearer {{jwt_token}}" },
+                      { "key": "Content-Type", "value": "application/json" }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"nome\": \"Sala Editada\",\n  \"ativo\": true\n}"
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/salas/1",
+                      "host": [ "{{base_url}}" ],
+                      "path": [ "api", "v1", "salas", "1" ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Remover Sala",
+                  "request": {
+                    "method": "DELETE",
+                    "header": [
+                      { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/salas/1",
+                      "host": [ "{{base_url}}" ],
+                      "path": [ "api", "v1", "salas", "1" ]
+                    }
+                  },
+                  "response": []
+                }
+              ]
+            },
+            {
+              "name": "Procedimentos",
+              "item": [
+                {
+                  "name": "Listar Procedimentos",
+                  "request": {
+                    "method": "GET",
+                    "header": [
+                      { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/procedimentos",
+                      "host": [ "{{base_url}}" ],
+                      "path": [ "api", "v1", "procedimentos" ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Buscar Procedimento por ID",
+                  "request": {
+                    "method": "GET",
+                    "header": [
+                      { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/procedimentos/1",
+                      "host": [ "{{base_url}}" ],
+                      "path": [ "api", "v1", "procedimentos", "1" ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Criar Procedimento",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      { "key": "Authorization", "value": "Bearer {{jwt_token}}" },
+                      { "key": "Content-Type", "value": "application/json" }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"nome\": \"Procedimento Teste\",\n  \"ativo\": true\n}"
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/procedimentos",
+                      "host": [ "{{base_url}}" ],
+                      "path": [ "api", "v1", "procedimentos" ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Editar Procedimento",
+                  "request": {
+                    "method": "PUT",
+                    "header": [
+                      { "key": "Authorization", "value": "Bearer {{jwt_token}}" },
+                      { "key": "Content-Type", "value": "application/json" }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"nome\": \"Procedimento Editado\",\n  \"ativo\": true\n}"
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/procedimentos/1",
+                      "host": [ "{{base_url}}" ],
+                      "path": [ "api", "v1", "procedimentos", "1" ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Remover Procedimento",
+                  "request": {
+                    "method": "DELETE",
+                    "header": [
+                      { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/procedimentos/1",
+                      "host": [ "{{base_url}}" ],
+                      "path": [ "api", "v1", "procedimentos", "1" ]
+                    }
+                  },
+                  "response": []
+                }
+              ]
+            },
+            {
+              "name": "Tipos de Acompanhante",
+              "item": [
+                {
+                  "name": "Listar Tipos de Acompanhante",
+                  "request": {
+                    "method": "GET",
+                    "header": [
+                      { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/tipos-acompanhante",
+                      "host": [ "{{base_url}}" ],
+                      "path": [ "api", "v1", "tipos-acompanhante" ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Buscar Tipo de Acompanhante por ID",
+                  "request": {
+                    "method": "GET",
+                    "header": [
+                      { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/tipos-acompanhante/1",
+                      "host": [ "{{base_url}}" ],
+                      "path": [ "api", "v1", "tipos-acompanhante", "1" ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Criar Tipo de Acompanhante",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      { "key": "Authorization", "value": "Bearer {{jwt_token}}" },
+                      { "key": "Content-Type", "value": "application/json" }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"nome\": \"Acompanhante Teste\",\n  \"ativo\": true\n}"
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/tipos-acompanhante",
+                      "host": [ "{{base_url}}" ],
+                      "path": [ "api", "v1", "tipos-acompanhante" ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Editar Tipo de Acompanhante",
+                  "request": {
+                    "method": "PUT",
+                    "header": [
+                      { "key": "Authorization", "value": "Bearer {{jwt_token}}" },
+                      { "key": "Content-Type", "value": "application/json" }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"nome\": \"Acompanhante Editado\",\n  \"ativo\": true\n}"
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/tipos-acompanhante/1",
+                      "host": [ "{{base_url}}" ],
+                      "path": [ "api", "v1", "tipos-acompanhante", "1" ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Remover Tipo de Acompanhante",
+                  "request": {
+                    "method": "DELETE",
+                    "header": [
+                      { "key": "Authorization", "value": "Bearer {{jwt_token}}" }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/api/v1/tipos-acompanhante/1",
+                      "host": [ "{{base_url}}" ],
+                      "path": [ "api", "v1", "tipos-acompanhante", "1" ]
+                    }
+                  },
+                  "response": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "API Externa (Token de API)",
+      "item": [
+        {
+          "name": "Utilitários",
+          "item": [
+            {
+              "name": "Health Check (Externo)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "X-API-Token", "value": "{{api_token}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/external/v1/health",
+                  "host": ["{{base_url}}"],
+                  "path": ["external", "v1", "health"]
+                }
+              },
+              "description": "Verifica se a API externa está ativa. Responde status customizado conforme ativação/desativação."
+            }
+          ]
+        },
+        {
+          "name": "CRUD Completo",
+          "item": [
+            {
+              "name": "Pacientes",
+              "item": [
+                {
+                  "name": "Listar todos",
+                  "request": {
+                    "method": "GET",
+                    "header": [{ "key": "X-API-Token", "value": "{{api_token}}" }],
+                    "url": { "raw": "{{base_url}}/external/v1/pacientes", "host": ["{{base_url}}"], "path": ["external", "v1", "pacientes"] }
+                  },
+                  "description": "Lista todos os pacientes da clínica autenticada via token de API."
+                },
+                {
+                  "name": "Listar por id",
+                  "request": {
+                    "method": "GET",
+                    "header": [{ "key": "X-API-Token", "value": "{{api_token}}" }],
+                    "url": { "raw": "{{base_url}}/external/v1/pacientes?id=1", "host": ["{{base_url}}"], "path": ["external", "v1", "pacientes"], "query": [{"key": "id", "value": "1"}] }
+                  },
+                  "description": "Lista paciente pelo id."
+                },
+                {
+                  "name": "Listar por cpf",
+                  "request": {
+                    "method": "GET",
+                    "header": [{ "key": "X-API-Token", "value": "{{api_token}}" }],
+                    "url": { "raw": "{{base_url}}/external/v1/pacientes?cpf=000.000.000-00", "host": ["{{base_url}}"], "path": ["external", "v1", "pacientes"], "query": [{"key": "cpf", "value": "000.000.000-00"}] }
+                  },
+                  "description": "Lista paciente pelo CPF."
+                },
+                {
+                  "name": "Listar por ativo",
+                  "request": {
+                    "method": "GET",
+                    "header": [{ "key": "X-API-Token", "value": "{{api_token}}" }],
+                    "url": { "raw": "{{base_url}}/external/v1/pacientes?ativo=true", "host": ["{{base_url}}"], "path": ["external", "v1", "pacientes"], "query": [{"key": "ativo", "value": "true"}] }
+                  },
+                  "description": "Lista pacientes filtrando por ativo (true/false)."
+                },
+                {
+                  "name": "Listar por todos os parâmetros",
+                  "request": {
+                    "method": "GET",
+                    "header": [{ "key": "X-API-Token", "value": "{{api_token}}" }],
+                    "url": { "raw": "{{base_url}}/external/v1/pacientes?id=1&cpf=000.000.000-00&ativo=true", "host": ["{{base_url}}"], "path": ["external", "v1", "pacientes"], "query": [
+                      {"key": "id", "value": "1"},
+                      {"key": "cpf", "value": "000.000.000-00"},
+                      {"key": "ativo", "value": "true"}
+                    ] }
+                  },
+                  "description": "Lista pacientes usando todos os filtros combinados."
+                },
+                {
+                  "name": "Criar paciente (completo)",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      { "key": "x-api-token", "value": "{{api_token}}" },
+                      { "key": "Content-Type", "value": "application/json" }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"nome\": \"João da Silva\",\n  \"cpf\": \"000.000.000-00\",\n  \"email\": \"joao@teste.com\",\n  \"telefone\": \"(11) 99999-9999\",\n  \"data_nascimento\": \"1990-01-01\",\n  \"sexo\": \"M\",\n  \"endereco\": \"Rua Exemplo, 123\",\n  \"cidade\": \"São Paulo\",\n  \"estado\": \"SP\",\n  \"cep\": \"01000-000\",\n  \"ativo\": true\n}"
+                    },
+                    "url": { "raw": "{{base_url}}/external/v1/pacientes", "host": ["{{base_url}}"], "path": ["external", "v1", "pacientes"] }
+                  },
+                  "description": "Cria um novo paciente preenchendo todos os campos possíveis. Veja a migration para detalhes dos tipos e restrições."
+                }
+              ]
+            },
+            {
+              "name": "Agendas",
+              "item": [
+                {
+                  "name": "Listar do dia (sem parâmetros)",
+                  "request": {
+                    "method": "GET",
+                    "header": [{ "key": "X-API-Token", "value": "{{api_token}}" }],
+                    "url": { "raw": "{{base_url}}/external/v1/agendas", "host": ["{{base_url}}"], "path": ["external", "v1", "agendas"] }
+                  },
+                  "description": "Lista agendas do dia atual."
+                },
+                {
+                  "name": "Listar por data_inicio/data_fim",
+                  "request": {
+                    "method": "GET",
+                    "header": [{ "key": "X-API-Token", "value": "{{api_token}}" }],
+                    "url": { "raw": "{{base_url}}/external/v1/agendas?data_inicio=2024-07-01&data_fim=2024-07-10", "host": ["{{base_url}}"], "path": ["external", "v1", "agendas"], "query": [
+                      {"key": "data_inicio", "value": "2024-07-01"},
+                      {"key": "data_fim", "value": "2024-07-10"}
+                    ] }
+                  },
+                  "description": "Lista agendas por intervalo de datas."
+                },
+                {
+                  "name": "Listar por profissional_id",
+                  "request": {
+                    "method": "GET",
+                    "header": [{ "key": "X-API-Token", "value": "{{api_token}}" }],
+                    "url": { "raw": "{{base_url}}/external/v1/agendas?profissional_id=1", "host": ["{{base_url}}"], "path": ["external", "v1", "agendas"], "query": [{"key": "profissional_id", "value": "1"}] }
+                  },
+                  "description": "Lista agendas por profissional_id."
+                },
+                {
+                  "name": "Listar por paciente_id",
+                  "request": {
+                    "method": "GET",
+                    "header": [{ "key": "X-API-Token", "value": "{{api_token}}" }],
+                    "url": { "raw": "{{base_url}}/external/v1/agendas?paciente_id=1", "host": ["{{base_url}}"], "path": ["external", "v1", "agendas"], "query": [{"key": "paciente_id", "value": "1"}] }
+                  },
+                  "description": "Lista agendas por paciente_id."
+                },
+                {
+                  "name": "Listar por unidade_atendimento_id",
+                  "request": {
+                    "method": "GET",
+                    "header": [{ "key": "X-API-Token", "value": "{{api_token}}" }],
+                    "url": { "raw": "{{base_url}}/external/v1/agendas?unidade_atendimento_id=1", "host": ["{{base_url}}"], "path": ["external", "v1", "agendas"], "query": [{"key": "unidade_atendimento_id", "value": "1"}] }
+                  },
+                  "description": "Lista agendas por unidade_atendimento_id."
+                },
+                {
+                  "name": "Listar por status",
+                  "request": {
+                    "method": "GET",
+                    "header": [{ "key": "X-API-Token", "value": "{{api_token}}" }],
+                    "url": { "raw": "{{base_url}}/external/v1/agendas?status=finalizado", "host": ["{{base_url}}"], "path": ["external", "v1", "agendas"], "query": [{"key": "status", "value": "finalizado"}] }
+                  },
+                  "description": "Lista agendas por status."
+                },
+                {
+                  "name": "Listar por todos os parâmetros",
+                  "request": {
+                    "method": "GET",
+                    "header": [{ "key": "X-API-Token", "value": "{{api_token}}" }],
+                    "url": { "raw": "{{base_url}}/external/v1/agendas?data_inicio=2024-07-01&data_fim=2024-07-10&profissional_id=1&paciente_id=1&unidade_atendimento_id=1&status=finalizado", "host": ["{{base_url}}"], "path": ["external", "v1", "agendas"], "query": [
+                      {"key": "data_inicio", "value": "2024-07-01"},
+                      {"key": "data_fim", "value": "2024-07-10"},
+                      {"key": "profissional_id", "value": "1"},
+                      {"key": "paciente_id", "value": "1"},
+                      {"key": "unidade_atendimento_id", "value": "1"},
+                      {"key": "status", "value": "finalizado"}
+                    ] }
+                  },
+                  "description": "Lista agendas usando todos os filtros combinados."
+                },
+                {
+                  "name": "Criar agenda (completo)",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      { "key": "x-api-token", "value": "{{api_token}}" },
+                      { "key": "Content-Type", "value": "application/json" }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"profissional_id\": 68,\n  \"paciente_id\": 10,\n  \"profissional_adicional_id\": null,\n  \"procedimento_id\": 1,\n  \"procedimento_adicional_id\": null,\n  \"sala_id\": 2,\n  \"unidade_atendimento_id\": 1,\n  \"convenio_id\": 3,\n  \"usuario_iniciou_atendimento\": null,\n  \"usuario_finalizaou_atendimento\": null,\n  \"acompanhante\": \"Nome do acompanhante\",\n  \"tipo_acompanhante_id\": 1,\n  \"sms_enviado\": null,\n  \"whatsapp_enviado\": null,\n  \"email_enviado\": null,\n  \"confirmacao_do_paciente\": false,\n  \"paciente_chegou\": false,\n  \"data_agendamento\": \"2025-07-15\",\n  \"inicio_atendimento\": null,\n  \"fim_atendimento\": null,\n  \"hora_inicio\": \"14:00\",\n  \"hora_fim\": \"15:00\",\n  \"status\": \"aberto\",\n  \"encaixe\": false,\n  \"preferencial\": false,\n  \"observacao\": \"Observação do agendamento\",\n  \"justificativa\": \"Primeiro agendamento do paciente\",\n  \"prioridade\": null,\n  \"usuario_alteracao\": null,\n  \"sequencia\": 1\n}"
+                    },
+                    "url": { "raw": "{{base_url}}/external/v1/agendas", "host": ["{{base_url}}"], "path": ["external", "v1", "agendas"] }
+                  },
+                  "response": [
+                    {
+                      "name": "Sucesso",
+                      "originalRequest": {},
+                      "status": "Created",
+                      "code": 201,
+                      "body": "{\n  \"sucesso\": true,\n  \"mensagem\": \"Agenda criada com sucesso\",\n  \"dados\": {\n    \"id\": 123,\n    \"profissional_id\": 68,\n    \"paciente_id\": 10,\n    \"status\": \"aberto\",\n    \"justificativa\": \"Primeiro agendamento do paciente\"\n  },\n  \"timestamp\": \"2025-07-01 15:00:00\"\n}"
+                    },
+                    {
+                      "name": "Erro - campo obrigatório ausente",
+                      "originalRequest": {},
+                      "status": "Unprocessable Entity",
+                      "code": 422,
+                      "body": "{\n  \"sucesso\": false,\n  \"mensagem\": \"Campos obrigatórios ausentes: profissional_id, paciente_id, procedimento_id, unidade_atendimento_id, data_agendamento, hora_inicio, hora_fim, status\",\n  \"erro\": \"campos_obrigatorios\",\n  \"timestamp\": \"2025-07-01 15:00:00\"\n}"
+                    }
+                  ],
+                  "description": "Cria uma nova agenda preenchendo todos os campos possíveis. Veja a migration para detalhes dos tipos e restrições. O campo valor_atendimento é preenchido automaticamente pelo valor do procedimento."
+                },
+                {
+                  "name": "Alterar status da agenda (com justificativa)",
+                  "request": {
+                    "method": "PATCH",
+                    "header": [
+                      { "key": "x-api-token", "value": "{{api_token}}" },
+                      { "key": "Content-Type", "value": "application/json" }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"status\": \"finalizado\",\n  \"justificativa\": \"Paciente compareceu e foi atendido.\"\n}"
+                    },
+                    "url": { "raw": "{{base_url}}/external/v1/agendas/1/status", "host": ["{{base_url}}"], "path": ["external", "v1", "agendas", "1", "status"] },
+                    "response": [
+                      {
+                        "name": "Sucesso",
+                        "originalRequest": {},
+                        "status": "OK",
+                        "code": 200,
+                        "body": "{\n  \"sucesso\": true,\n  \"mensagem\": \"Status da agenda alterado com sucesso\",\n  \"dados\": {\n    \"id\": 1,\n    \"status\": \"finalizado\",\n    \"justificativa\": \"Paciente compareceu e foi atendido.\"\n  },\n  \"timestamp\": \"2025-07-01 15:00:00\"\n}"
+                      },
+                      {
+                        "name": "Erro - justificativa ausente",
+                        "originalRequest": {},
+                        "status": "Unprocessable Entity",
+                        "code": 422,
+                        "body": "{\n  \"sucesso\": false,\n  \"mensagem\": \"Status e justificativa são obrigatórios\",\n  \"erro\": \"status_justificativa_obrigatorios\",\n  \"timestamp\": \"2025-07-01 15:00:00\"\n}"
+                      }
+                    ]
+                  },
+                  "description": "Altera o status da agenda, exigindo justificativa obrigatória."
+                },
+                {
+                  "name": "Atualizar agenda (com justificativa)",
+                  "request": {
+                    "method": "PUT",
+                    "header": [
+                      { "key": "x-api-token", "value": "{{api_token}}" },
+                      { "key": "Content-Type", "value": "application/json" }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"status\": \"remarcado\",\n  \"hora_inicio\": \"15:00\",\n  \"hora_fim\": \"16:00\",\n  \"justificativa\": \"Paciente solicitou alteração de horário.\"\n}"
+                    },
+                    "url": { "raw": "{{base_url}}/external/v1/agendas/1", "host": ["{{base_url}}"], "path": ["external", "v1", "agendas", "1"] },
+                    "response": [
+                      {
+                        "name": "Sucesso",
+                        "originalRequest": {},
+                        "status": "OK",
+                        "code": 200,
+                        "body": "{\n  \"sucesso\": true,\n  \"mensagem\": \"Agenda atualizada com sucesso\",\n  \"dados\": {\n    \"id\": 1,\n    \"status\": \"remarcado\",\n    \"hora_inicio\": \"15:00\",\n    \"hora_fim\": \"16:00\",\n    \"justificativa\": \"Paciente solicitou alteração de horário.\"\n  },\n  \"timestamp\": \"2025-07-01 15:00:00\"\n}"
+                      },
+                      {
+                        "name": "Erro - justificativa ausente",
+                        "originalRequest": {},
+                        "status": "Unprocessable Entity",
+                        "code": 422,
+                        "body": "{\n  \"sucesso\": false,\n  \"mensagem\": \"Justificativa é obrigatória para alteração\",\n  \"erro\": \"justificativa_obrigatoria\",\n  \"timestamp\": \"2025-07-01 15:00:00\"\n}"
+                      }
+                    ]
+                  },
+                  "description": "Atualiza todos os campos da agenda, exigindo justificativa obrigatória."
+                },
+                {
+                  "name": "Remover agenda (soft delete, com justificativa)",
+                  "request": {
+                    "method": "DELETE",
+                    "header": [
+                      { "key": "x-api-token", "value": "{{api_token}}" },
+                      { "key": "Content-Type", "value": "application/json" }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"justificativa\": \"Cancelamento solicitado pelo paciente.\"\n}"
+                    },
+                    "url": { "raw": "{{base_url}}/external/v1/agendas/1", "host": ["{{base_url}}"], "path": ["external", "v1", "agendas", "1"] },
+                    "response": [
+                      {
+                        "name": "Sucesso",
+                        "originalRequest": {},
+                        "status": "OK",
+                        "code": 200,
+                        "body": "{\n  \"sucesso\": true,\n  \"mensagem\": \"Agenda removida com sucesso\",\n  \"timestamp\": \"2025-07-01 15:00:00\"\n}"
+                      },
+                      {
+                        "name": "Erro - justificativa ausente",
+                        "originalRequest": {},
+                        "status": "Unprocessable Entity",
+                        "code": 422,
+                        "body": "{\n  \"sucesso\": false,\n  \"mensagem\": \"Justificativa é obrigatória para remoção\",\n  \"erro\": \"justificativa_obrigatoria\",\n  \"timestamp\": \"2025-07-01 15:00:00\"\n}"
+                      }
+                    ]
+                  },
+                  "description": "Remove (soft delete) uma agenda, exigindo justificativa obrigatória."
+                }
+              ]
+            },
+            {
+              "name": "Unidades de Atendimento",
+              "item": [
+                {
+                  "name": "Listar Unidades",
+                  "request": {
+                    "method": "GET",
+                    "header": [
+                      { "key": "X-API-Token", "value": "{{api_token}}" }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/external/v1/unidades-atendimento",
+                      "host": [ "{{base_url}}" ],
+                      "path": [ "external", "v1", "unidades-atendimento" ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Buscar Unidade por ID",
+                  "request": {
+                    "method": "GET",
+                    "header": [
+                      { "key": "X-API-Token", "value": "{{api_token}}" }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/external/v1/unidades-atendimento/1",
+                      "host": [ "{{base_url}}" ],
+                      "path": [ "external", "v1", "unidades-atendimento", "1" ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Criar Unidade",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      { "key": "X-API-Token", "value": "{{api_token}}" },
+                      { "key": "Content-Type", "value": "application/json" }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"nome\": \"Unidade Nova\",\n  \"cpf_cnpj\": \"12345678000199\",\n  \"cep\": \"12345-678\",\n  \"logradouro\": \"Rua Nova\",\n  \"numero\": \"200\",\n  \"bairro\": \"Bairro Novo\",\n  \"cidade\": \"Cidade Nova\",\n  \"estado\": \"SP\",\n  \"complemento\": \"Prédio B\",\n  \"celular\": \"11988887777\",\n  \"telefone\": \"1144445555\",\n  \"ativo\": true\n}"
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/external/v1/unidades-atendimento",
+                      "host": [ "{{base_url}}" ],
+                      "path": [ "external", "v1", "unidades-atendimento" ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Editar Unidade",
+                  "request": {
+                    "method": "PUT",
+                    "header": [
+                      { "key": "X-API-Token", "value": "{{api_token}}" },
+                      { "key": "Content-Type", "value": "application/json" }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"nome\": \"Unidade Editada\",\n  \"cpf_cnpj\": \"12345678000199\",\n  \"cep\": \"12345-678\",\n  \"logradouro\": \"Rua Editada\",\n  \"numero\": \"201\",\n  \"bairro\": \"Bairro Editado\",\n  \"cidade\": \"Cidade Editada\",\n  \"estado\": \"SP\",\n  \"complemento\": \"Prédio C\",\n  \"celular\": \"11988887777\",\n  \"telefone\": \"1144445555\",\n  \"ativo\": true\n}"
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/external/v1/unidades-atendimento/2",
+                      "host": [ "{{base_url}}" ],
+                      "path": [ "external", "v1", "unidades-atendimento", "2" ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Remover Unidade",
+                  "request": {
+                    "method": "DELETE",
+                    "header": [
+                      { "key": "X-API-Token", "value": "{{api_token}}" }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/external/v1/unidades-atendimento/2",
+                      "host": [ "{{base_url}}" ],
+                      "path": [ "external", "v1", "unidades-atendimento", "2" ]
+                    }
+                  },
+                  "response": []
+                }
+              ]
+            },
+            {
+              "name": "Convênios",
+              "item": [
+                {
+                  "name": "Listar Convênios",
+                  "request": {
+                    "method": "GET",
+                    "header": [
+                      { "key": "X-API-Token", "value": "{{api_token}}" }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/external/v1/convenios",
+                      "host": [ "{{base_url}}" ],
+                      "path": [ "external", "v1", "convenios" ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Buscar Convênio por ID",
+                  "request": {
+                    "method": "GET",
+                    "header": [
+                      { "key": "X-API-Token", "value": "{{api_token}}" }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/external/v1/convenios/1",
+                      "host": [ "{{base_url}}" ],
+                      "path": [ "external", "v1", "convenios", "1" ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Criar Convênio",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      { "key": "X-API-Token", "value": "{{api_token}}" },
+                      { "key": "Content-Type", "value": "application/json" }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"nome\": \"Convênio Teste\",\n  \"ativo\": true\n}"
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/external/v1/convenios",
+                      "host": [ "{{base_url}}" ],
+                      "path": [ "external", "v1", "convenios" ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Editar Convênio",
+                  "request": {
+                    "method": "PUT",
+                    "header": [
+                      { "key": "X-API-Token", "value": "{{api_token}}" },
+                      { "key": "Content-Type", "value": "application/json" }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"nome\": \"Convênio Editado\",\n  \"ativo\": true\n}"
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/external/v1/convenios/1",
+                      "host": [ "{{base_url}}" ],
+                      "path": [ "external", "v1", "convenios", "1" ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Remover Convênio",
+                  "request": {
+                    "method": "DELETE",
+                    "header": [
+                      { "key": "X-API-Token", "value": "{{api_token}}" }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/external/v1/convenios/1",
+                      "host": [ "{{base_url}}" ],
+                      "path": [ "external", "v1", "convenios", "1" ]
+                    }
+                  },
+                  "response": []
+                }
+              ]
+            },
+            {
+              "name": "Salas",
+              "item": [
+                {
+                  "name": "Listar Salas",
+                  "request": {
+                    "method": "GET",
+                    "header": [
+                      { "key": "X-API-Token", "value": "{{api_token}}" }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/external/v1/salas",
+                      "host": [ "{{base_url}}" ],
+                      "path": [ "external", "v1", "salas" ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Buscar Sala por ID",
+                  "request": {
+                    "method": "GET",
+                    "header": [
+                      { "key": "X-API-Token", "value": "{{api_token}}" }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/external/v1/salas/1",
+                      "host": [ "{{base_url}}" ],
+                      "path": [ "external", "v1", "salas", "1" ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Criar Sala",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      { "key": "X-API-Token", "value": "{{api_token}}" },
+                      { "key": "Content-Type", "value": "application/json" }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"nome\": \"Sala Teste\",\n  \"ativo\": true\n}"
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/external/v1/salas",
+                      "host": [ "{{base_url}}" ],
+                      "path": [ "external", "v1", "salas" ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Editar Sala",
+                  "request": {
+                    "method": "PUT",
+                    "header": [
+                      { "key": "X-API-Token", "value": "{{api_token}}" },
+                      { "key": "Content-Type", "value": "application/json" }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"nome\": \"Sala Editada\",\n  \"ativo\": true\n}"
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/external/v1/salas/1",
+                      "host": [ "{{base_url}}" ],
+                      "path": [ "external", "v1", "salas", "1" ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Remover Sala",
+                  "request": {
+                    "method": "DELETE",
+                    "header": [
+                      { "key": "X-API-Token", "value": "{{api_token}}" }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/external/v1/salas/1",
+                      "host": [ "{{base_url}}" ],
+                      "path": [ "external", "v1", "salas", "1" ]
+                    }
+                  },
+                  "response": []
+                }
+              ]
+            },
+            {
+              "name": "Procedimentos",
+              "item": [
+                {
+                  "name": "Listar procedimentos",
+                  "request": {
+                    "method": "GET",
+                    "header": [{ "key": "x-api-token", "value": "{{api_token}}" }],
+                    "url": { "raw": "{{base_url}}/external/v1/procedimentos", "host": ["{{base_url}}"], "path": ["external", "v1", "procedimentos"] }
+                  },
+                  "description": "Lista todos os procedimentos disponíveis."
+                },
+                {
+                  "name": "Detalhar procedimento por ID",
+                  "request": {
+                    "method": "GET",
+                    "header": [{ "key": "x-api-token", "value": "{{api_token}}" }],
+                    "url": { "raw": "{{base_url}}/external/v1/procedimentos/1", "host": ["{{base_url}}"], "path": ["external", "v1", "procedimentos", "1"] }
+                  },
+                  "description": "Detalha um procedimento pelo ID."
+                },
+                {
+                  "name": "Criar procedimento",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      { "key": "x-api-token", "value": "{{api_token}}" },
+                      { "key": "Content-Type", "value": "application/json" }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"nome\": \"Consulta\",\n  \"valor\": 150.00\n}"
+                    },
+                    "url": { "raw": "{{base_url}}/external/v1/procedimentos", "host": ["{{base_url}}"], "path": ["external", "v1", "procedimentos"] }
+                  },
+                  "description": "Cria um novo procedimento."
+                },
+                {
+                  "name": "Atualizar procedimento",
+                  "request": {
+                    "method": "PUT",
+                    "header": [
+                      { "key": "x-api-token", "value": "{{api_token}}" },
+                      { "key": "Content-Type", "value": "application/json" }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"nome\": \"Consulta Especializada\",\n  \"valor\": 200.00\n}"
+                    },
+                    "url": { "raw": "{{base_url}}/external/v1/procedimentos/1", "host": ["{{base_url}}"], "path": ["external", "v1", "procedimentos", "1"] }
+                  },
+                  "description": "Atualiza um procedimento existente pelo ID."
+                },
+                {
+                  "name": "Remover procedimento",
+                  "request": {
+                    "method": "DELETE",
+                    "header": [{ "key": "x-api-token", "value": "{{api_token}}" }],
+                    "url": { "raw": "{{base_url}}/external/v1/procedimentos/1", "host": ["{{base_url}}"], "path": ["external", "v1", "procedimentos", "1"] }
+                  },
+                  "description": "Remove (soft delete) um procedimento pelo ID."
+                }
+              ]
+            },
+            {
+              "name": "Tipos de Acompanhante",
+              "item": [
+                {
+                  "name": "Listar Tipos de Acompanhante",
+                  "request": {
+                    "method": "GET",
+                    "header": [
+                      { "key": "X-API-Token", "value": "{{api_token}}" }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/external/v1/tipos-acompanhante",
+                      "host": [ "{{base_url}}" ],
+                      "path": [ "external", "v1", "tipos-acompanhante" ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Buscar Tipo de Acompanhante por ID",
+                  "request": {
+                    "method": "GET",
+                    "header": [
+                      { "key": "X-API-Token", "value": "{{api_token}}" }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/external/v1/tipos-acompanhante/1",
+                      "host": [ "{{base_url}}" ],
+                      "path": [ "external", "v1", "tipos-acompanhante", "1" ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Criar Tipo de Acompanhante",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      { "key": "X-API-Token", "value": "{{api_token}}" },
+                      { "key": "Content-Type", "value": "application/json" }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"nome\": \"Acompanhante Teste\",\n  \"ativo\": true\n}"
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/external/v1/tipos-acompanhante",
+                      "host": [ "{{base_url}}" ],
+                      "path": [ "external", "v1", "tipos-acompanhante" ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Editar Tipo de Acompanhante",
+                  "request": {
+                    "method": "PUT",
+                    "header": [
+                      { "key": "X-API-Token", "value": "{{api_token}}" },
+                      { "key": "Content-Type", "value": "application/json" }
+                    ],
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"nome\": \"Acompanhante Editado\",\n  \"ativo\": true\n}"
+                    },
+                    "url": {
+                      "raw": "{{base_url}}/external/v1/tipos-acompanhante/1",
+                      "host": [ "{{base_url}}" ],
+                      "path": [ "external", "v1", "tipos-acompanhante", "1" ]
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Remover Tipo de Acompanhante",
+                  "request": {
+                    "method": "DELETE",
+                    "header": [
+                      { "key": "X-API-Token", "value": "{{api_token}}" }
+                    ],
+                    "url": {
+                      "raw": "{{base_url}}/external/v1/tipos-acompanhante/1",
+                      "host": [ "{{base_url}}" ],
+                      "path": [ "external", "v1", "tipos-acompanhante", "1" ]
+                    }
+                  },
+                  "response": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Portal do Paciente (JWT)",
+      "item": [
+        {
+          "name": "Autenticação",
+          "item": [
+            {
+              "name": "Verificar CPF",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"cpf\": \"123.456.789-01\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/portal/auth/verificar-cpf",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "portal", "auth", "verificar-cpf"]
+                }
+              },
+              "description": "Verifica se um CPF existe no sistema antes do login."
+            },
+            {
+              "name": "Login",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"cpf\": \"123.456.789-01\",\n  \"senha\": \"123456\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/portal/auth/login",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "portal", "auth", "login"]
+                }
+              },
+              "description": "Autentica paciente e retorna JWT. Use o token retornado como Bearer nos demais endpoints."
+            },
+            {
+              "name": "Refresh Token",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/portal/auth/refresh",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "portal", "auth", "refresh"]
+                }
+              },
+              "description": "Renova o token JWT usando o refresh token."
+            },
+            {
+              "name": "Esqueci a Senha",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"cpf\": \"123.456.789-01\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/portal/auth/forgot-password",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "portal", "auth", "forgot-password"]
+                }
+              },
+              "description": "Solicita redefinição de senha via email/SMS."
+            },
+            {
+              "name": "Redefinir Senha",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"token\": \"{{reset_token}}\",\n  \"nova_senha\": \"123456\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/portal/auth/reset-password",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "portal", "auth", "reset-password"]
+                }
+              },
+              "description": "Redefine a senha usando o token recebido."
+            }
+          ]
+        },
+        {
+          "name": "Perfil do Paciente",
+          "item": [
+            {
+              "name": "Obter Perfil",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{portal_jwt_token}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/portal/perfil",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "portal", "perfil"]
+                }
+              },
+              "description": "Obtém os dados do perfil do paciente logado."
+            },
+            {
+              "name": "Atualizar Perfil",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{portal_jwt_token}}" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nome\": \"João da Silva\",\n  \"email\": \"joao@email.com\",\n  \"telefone\": \"(11) 99999-9999\",\n  \"endereco\": \"Rua Exemplo, 123\",\n  \"cidade\": \"São Paulo\",\n  \"estado\": \"SP\",\n  \"cep\": \"01000-000\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/portal/perfil",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "portal", "perfil"]
+                }
+              },
+              "description": "Atualiza os dados do perfil do paciente."
+            },
+            {
+              "name": "Upload Foto",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{portal_jwt_token}}" }
+                ],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "foto",
+                      "type": "file",
+                      "src": []
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/portal/perfil/foto",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "portal", "perfil", "foto"]
+                }
+              },
+              "description": "Faz upload da foto do perfil do paciente."
+            }
+          ]
+        },
+        {
+          "name": "Carteira de Vacinação",
+          "item": [
+            {
+              "name": "Listar Vacinas",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{portal_jwt_token}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/portal/carteira-vacinacao",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "portal", "carteira-vacinacao"]
+                }
+              },
+              "description": "Lista todas as vacinas do paciente."
+            },
+            {
+              "name": "Gerar PDF",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{portal_jwt_token}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/portal/carteira-vacinacao/pdf",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "portal", "carteira-vacinacao", "pdf"]
+                }
+              },
+              "description": "Gera PDF da carteira de vacinação."
+            },
+            {
+              "name": "Detalhes da Vacina",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{portal_jwt_token}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/portal/carteira-vacinacao/detalhes/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "portal", "carteira-vacinacao", "detalhes", "1"]
+                }
+              },
+              "description": "Obtém detalhes de uma vacina específica."
+            }
+          ]
+        },
+        {
+          "name": "Agendamentos",
+          "item": [
+            {
+              "name": "Listar Agendamentos",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{portal_jwt_token}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/portal/agendamentos",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "portal", "agendamentos"]
+                }
+              },
+              "description": "Lista todos os agendamentos do paciente."
+            },
+            {
+              "name": "Detalhes do Agendamento",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{portal_jwt_token}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/portal/agendamentos/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "portal", "agendamentos", "1"]
+                }
+              },
+              "description": "Obtém detalhes de um agendamento específico."
+            },
+            {
+              "name": "Cancelar Agendamento",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{portal_jwt_token}}" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"motivo\": \"Não poderei comparecer\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/portal/agendamentos/1/cancelar",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "portal", "agendamentos", "1", "cancelar"]
+                }
+              },
+              "description": "Cancela um agendamento específico."
+            },
+            {
+              "name": "Solicitar Agendamento",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{portal_jwt_token}}" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"procedimento_id\": 1,\n  \"profissional_id\": 1,\n  \"data_preferencial\": \"2024-07-15\",\n  \"hora_preferencial\": \"14:00\",\n  \"observacao\": \"Consulta de rotina\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/portal/agendamentos/solicitar",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "portal", "agendamentos", "solicitar"]
+                }
+              },
+              "description": "Solicita um novo agendamento."
+            }
+          ]
+        },
+        {
+          "name": "Documentos",
+          "item": [
+            {
+              "name": "Listar Documentos",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{portal_jwt_token}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/portal/documentos",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "portal", "documentos"]
+                }
+              },
+              "description": "Lista todos os documentos do paciente."
+            },
+            {
+              "name": "Download Documento",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{portal_jwt_token}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/portal/documentos/1/download",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "portal", "documentos", "1", "download"]
+                }
+              },
+              "description": "Faz download de um documento específico."
+            }
+          ]
+        },
+        {
+          "name": "Mensagens",
+          "item": [
+            {
+              "name": "Listar Mensagens",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{portal_jwt_token}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/portal/mensagens",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "portal", "mensagens"]
+                }
+              },
+              "description": "Lista todas as mensagens do paciente."
+            },
+            {
+              "name": "Detalhes da Mensagem",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{portal_jwt_token}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/portal/mensagens/1",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "portal", "mensagens", "1"]
+                }
+              },
+              "description": "Obtém detalhes de uma mensagem específica."
+            },
+            {
+              "name": "Enviar Mensagem",
+              "request": {
+                "method": "POST",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{portal_jwt_token}}" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"assunto\": \"Dúvida sobre consulta\",\n  \"mensagem\": \"Gostaria de saber se posso reagendar minha consulta.\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/portal/mensagens",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "portal", "mensagens"]
+                }
+              },
+              "description": "Envia uma nova mensagem para a clínica."
+            },
+            {
+              "name": "Marcar como Lida",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{portal_jwt_token}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/portal/mensagens/1/ler",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "portal", "mensagens", "1", "ler"]
+                }
+              },
+              "description": "Marca uma mensagem como lida."
+            }
+          ]
+        },
+        {
+          "name": "Notificações",
+          "item": [
+            {
+              "name": "Listar Notificações",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{portal_jwt_token}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/portal/notificacoes",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "portal", "notificacoes"]
+                }
+              },
+              "description": "Lista todas as notificações do paciente."
+            },
+            {
+              "name": "Marcar como Lida",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{portal_jwt_token}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/portal/notificacoes/1/ler",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "portal", "notificacoes", "1", "ler"]
+                }
+              },
+              "description": "Marca uma notificação como lida."
+            },
+            {
+              "name": "Configurar Notificações",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{portal_jwt_token}}" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": true,\n  \"sms\": false,\n  \"push\": true\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/portal/notificacoes/configuracoes",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "portal", "notificacoes", "configuracoes"]
+                }
+              },
+              "description": "Configura as preferências de notificação."
+            }
+          ]
+        },
+        {
+          "name": "Configurações",
+          "item": [
+            {
+              "name": "Obter Configurações",
+              "request": {
+                "method": "GET",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{portal_jwt_token}}" }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/api/portal/configuracoes",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "portal", "configuracoes"]
+                }
+              },
+              "description": "Obtém as configurações do paciente."
+            },
+            {
+              "name": "Alterar Senha",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{portal_jwt_token}}" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"senha_atual\": \"123456\",\n  \"nova_senha\": \"654321\",\n  \"confirmar_senha\": \"654321\"\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/portal/configuracoes/senha",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "portal", "configuracoes", "senha"]
+                }
+              },
+              "description": "Altera a senha do paciente."
+            },
+            {
+              "name": "Configurar Notificações",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  { "key": "Authorization", "value": "Bearer {{portal_jwt_token}}" },
+                  { "key": "Content-Type", "value": "application/json" }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": true,\n  \"sms\": false,\n  \"push\": true\n}"
+                },
+                "url": {
+                  "raw": "{{base_url}}/api/portal/configuracoes/notificacoes",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "portal", "configuracoes", "notificacoes"]
+                }
+              },
+              "description": "Configura as preferências de notificação."
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "event": [],
+  "variable": [
+    { "key": "base_url", "value": "http://localhost" },
+    { "key": "jwt_token", "value": "" },
+    { "key": "api_token", "value": "" },
+    { "key": "usuario_email", "value": "" },
+    { "key": "usuario_senha", "value": "" },
+    { "key": "profissional_id", "value": "" },
+    { "key": "data_inicio", "value": "" },
+    { "key": "data_fim", "value": "" },
+    { "key": "unidade_atendimento_id", "value": "" },
+    { "key": "portal_jwt_token", "value": "" },
+    { "key": "refresh_token", "value": "" },
+    { "key": "reset_token", "value": "" },
+    { "key": "paciente_cpf", "value": "123.456.789-01" },
+    { "key": "paciente_senha", "value": "123456" }
+  ]
+} 

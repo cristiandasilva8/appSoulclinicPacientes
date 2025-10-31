@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../config/app_config.dart';
 import '../services/auth_bloc.dart';
+import '../utils/cpf_formatter.dart';
 import 'dashboard_screen.dart';
 import 'debug_clientes_screen.dart';
+import 'reset_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -28,22 +31,55 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: BlocListener<AuthBloc, AuthState>(
+      body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
+          print('🔍 AuthBloc State: $state');
+          print('🔍 State type: ${state.runtimeType}');
+          
           if (state is AuthAuthenticated) {
+            print('✅ Login bem-sucedido, navegando para dashboard');
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(builder: (context) => const DashboardScreen()),
             );
           } else if (state is AuthError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.red,
-              ),
-            );
+            print('❌ Erro de autenticação: ${state.message}');
+            print('❌ Tentando mostrar SnackBar...');
+            
+            // Forçar o SnackBar a aparecer
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              ScaffoldMessenger.of(context).clearSnackBars();
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('ERRO: ${state.message}'),
+                  backgroundColor: Colors.red,
+                  duration: const Duration(seconds: 10),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            });
+          } else if (state is AuthLoading) {
+            print('⏳ Carregando...');
+          } else {
+            print('🔄 Estado: $state');
           }
         },
-        child: Container(
+        builder: (context, state) {
+          // Mostrar mensagem de erro diretamente na tela
+          if (state is AuthError) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              ScaffoldMessenger.of(context).clearSnackBars();
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('ERRO: ${state.message}'),
+                  backgroundColor: Colors.red,
+                  duration: const Duration(seconds: 10),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            });
+          }
+          
+          return Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
@@ -156,6 +192,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           TextFormField(
                             controller: _cpfController,
                             keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                              CpfFormatter(),
+                            ],
                             decoration: const InputDecoration(
                               labelText: 'CPF',
                               hintText: '000.000.000-00',
@@ -166,10 +206,11 @@ class _LoginScreenState extends State<LoginScreen> {
                               if (value == null || value.isEmpty) {
                                 return 'Por favor, insira seu CPF';
                               }
-                              // Validação básica de CPF (11 dígitos)
-                              final cpfDigits = value.replaceAll(RegExp(r'[^0-9]'), '');
-                              if (cpfDigits.length != 11) {
+                              if (!CpfFormatter.isValidLength(value)) {
                                 return 'CPF deve ter 11 dígitos';
+                              }
+                              if (!CpfFormatter.isValid(value)) {
+                                return 'CPF inválido';
                               }
                               return null;
                             },
@@ -240,10 +281,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           // Link Esqueci Senha
                           TextButton(
                             onPressed: () {
-                              // TODO: Implementar recuperação de senha
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Funcionalidade em desenvolvimento'),
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const ResetPasswordScreen(),
                                 ),
                               );
                             },
@@ -281,7 +322,8 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
           ),
-        ),
+        );
+        },
       ),
     );
   }
@@ -293,7 +335,7 @@ class _LoginScreenState extends State<LoginScreen> {
       
       context.read<AuthBloc>().add(
         LoginRequested(
-          cpf: _cpfController.text.trim(),
+          cpf: _cpfController.text.trim(), // Enviar CPF com máscara
           senha: _senhaController.text,
           dbGroup: currentTenant,
         ),

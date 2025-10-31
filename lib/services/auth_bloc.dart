@@ -59,6 +59,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     LoginRequested event,
     Emitter<AuthState> emit,
   ) async {
+    print('🚀 Iniciando login para CPF: ${event.cpf}');
+    print('🚀 DB Group: ${event.dbGroup}');
     emit(AuthLoading());
 
     try {
@@ -68,12 +70,20 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         dbGroup: event.dbGroup,
       );
 
+      print('📡 Resposta da API: success=${response.success}, message=${response.message}');
+      print('📡 Dados recebidos: ${response.data}');
+      
       if (response.success && response.data != null) {
+        print('✅ Login bem-sucedido');
+        print('✅ Usuário: ${response.data!.user.nome}');
         emit(AuthAuthenticated(user: response.data!.user));
       } else {
+        print('❌ Login falhou: ${response.message}');
         emit(AuthError(message: response.message));
       }
     } catch (e) {
+      print('💥 Erro na requisição: $e');
+      print('💥 Stack trace: ${StackTrace.current}');
       emit(AuthError(message: 'Erro de conexão: ${e.toString()}'));
     }
   }
@@ -107,12 +117,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         if (user != null) {
           emit(AuthAuthenticated(user: user));
         } else {
+          // Se não conseguiu decodificar o usuário, pode ser token inválido
+          print('⚠️ Token existe mas não foi possível decodificar usuário - limpando tokens');
+          await _authService.logout();
           emit(AuthUnauthenticated());
         }
       } else {
         emit(AuthUnauthenticated());
       }
     } catch (e) {
+      print('❌ Erro ao verificar status de autenticação: $e');
       emit(AuthUnauthenticated());
     }
   }

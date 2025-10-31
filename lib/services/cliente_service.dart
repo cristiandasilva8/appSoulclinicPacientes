@@ -34,14 +34,13 @@ class ClienteInfo {
   final int id;
   final String nome;
   final String email;
-  final String cpf;
   final String? telefone;
-  final String? celular;
   final String? cnpj;
   final String? razaoSocial;
+  final String? fantasia;
   final bool ativo;
   final bool bloqueado;
-  final String? dbGroup;
+  final String? databaseName;
   final DateTime createdAt;
   final DateTime? updatedAt;
 
@@ -49,31 +48,29 @@ class ClienteInfo {
     required this.id,
     required this.nome,
     required this.email,
-    required this.cpf,
     this.telefone,
-    this.celular,
     this.cnpj,
     this.razaoSocial,
+    this.fantasia,
     required this.ativo,
     required this.bloqueado,
-    this.dbGroup,
+    this.databaseName,
     required this.createdAt,
     this.updatedAt,
   });
 
   factory ClienteInfo.fromJson(Map<String, dynamic> json) {
     return ClienteInfo(
-      id: json['id'],
+      id: int.parse(json['id'].toString()),
       nome: json['nome'],
       email: json['email'],
-      cpf: json['cpf'],
       telefone: json['telefone'],
-      celular: json['celular'],
       cnpj: json['cnpj'],
       razaoSocial: json['razao_social'],
-      ativo: json['ativo'] ?? true,
-      bloqueado: json['bloqueado'] ?? false,
-      dbGroup: json['db_group'],
+      fantasia: json['fantasia'],
+      ativo: json['ativo'] == 't' || json['ativo'] == true,
+      bloqueado: json['bloqueado'] == 't' || json['bloqueado'] == true,
+      databaseName: json['database_name'],
       createdAt: DateTime.parse(json['created_at']),
       updatedAt: json['updated_at'] != null 
           ? DateTime.parse(json['updated_at']) 
@@ -86,19 +83,19 @@ class ClienteInfo {
       'id': id,
       'nome': nome,
       'email': email,
-      'cpf': cpf,
       'telefone': telefone,
-      'celular': celular,
       'cnpj': cnpj,
       'razao_social': razaoSocial,
+      'fantasia': fantasia,
       'ativo': ativo,
       'bloqueado': bloqueado,
-      'db_group': dbGroup,
+      'database_name': databaseName,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
     };
   }
 
   bool get isAtivo => ativo && !bloqueado;
-  String get displayName => razaoSocial ?? nome;
+  String get displayName => fantasia?.isNotEmpty == true ? fantasia! : (razaoSocial ?? nome);
+  String get cpf => cnpj ?? ''; // Para compatibilidade com o app
 }

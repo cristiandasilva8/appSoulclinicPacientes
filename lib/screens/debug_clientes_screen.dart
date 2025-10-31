@@ -3,6 +3,7 @@ import '../config/app_config.dart';
 import '../services/auth_service.dart';
 import '../services/cliente_service.dart';
 import '../models/api_response.dart';
+import 'debug_api_screen.dart';
 
 class DebugClientesScreen extends StatefulWidget {
   const DebugClientesScreen({super.key});
@@ -59,8 +60,21 @@ class _DebugClientesScreenState extends State<DebugClientesScreen> {
         foregroundColor: Colors.white,
         actions: [
           IconButton(
+            icon: const Icon(Icons.bug_report),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const DebugApiScreen(),
+                ),
+              );
+            },
+            tooltip: 'Debug API',
+          ),
+          IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _loadClientes,
+            tooltip: 'Recarregar',
           ),
         ],
       ),
@@ -212,7 +226,7 @@ class _DebugClientesScreenState extends State<DebugClientesScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'CPF: ${cliente.cpf}',
+              'CNPJ: ${cliente.cnpj ?? 'N/A'}',
               style: const TextStyle(fontSize: 14),
             ),
             Text(
@@ -224,14 +238,14 @@ class _DebugClientesScreenState extends State<DebugClientesScreen> {
                 'Telefone: ${cliente.telefone}',
                 style: const TextStyle(fontSize: 14),
               ),
-            if (cliente.celular != null)
+            if (cliente.fantasia != null && cliente.fantasia!.isNotEmpty)
               Text(
-                'Celular: ${cliente.celular}',
+                'Fantasia: ${cliente.fantasia}',
                 style: const TextStyle(fontSize: 14),
               ),
-            if (cliente.dbGroup != null)
+            if (cliente.databaseName != null)
               Text(
-                'DB Group: ${cliente.dbGroup}',
+                'Database: ${cliente.databaseName}',
                 style: TextStyle(
                   fontSize: 12,
                   color: Colors.grey[600],
@@ -242,9 +256,9 @@ class _DebugClientesScreenState extends State<DebugClientesScreen> {
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: () => _copiarCpf(cliente.cpf),
+                    onPressed: () => _copiarCpf(cliente.cnpj ?? ''),
                     icon: const Icon(Icons.copy, size: 16),
-                    label: const Text('Copiar CPF'),
+                    label: const Text('Copiar CNPJ'),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -267,11 +281,11 @@ class _DebugClientesScreenState extends State<DebugClientesScreen> {
     );
   }
 
-  void _copiarCpf(String cpf) {
+  void _copiarCpf(String cnpj) {
     // Em um app real, você usaria Clipboard.setData
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('CPF copiado: $cpf'),
+        content: Text('CNPJ copiado: $cnpj'),
         duration: const Duration(seconds: 2),
       ),
     );
@@ -292,8 +306,8 @@ class _DebugClientesScreenState extends State<DebugClientesScreen> {
             onPressed: () {
               Navigator.pop(context);
               // Aqui você pode navegar de volta para a tela de login
-              // e preencher automaticamente o CPF
-              Navigator.pop(context, cliente.cpf);
+              // e preencher automaticamente o CNPJ
+              Navigator.pop(context, cliente.cnpj);
             },
             child: const Text('Usar'),
           ),

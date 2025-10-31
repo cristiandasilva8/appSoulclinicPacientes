@@ -6,6 +6,11 @@ import '../services/dashboard_service.dart';
 import '../models/agendamento.dart';
 import 'perfil_screen.dart';
 import 'agendamentos_screen.dart';
+import 'carteira_vacinacao_screen.dart';
+import 'documentos_screen.dart';
+import 'mensagens_screen.dart';
+import 'notificacoes_screen.dart';
+import 'contas_pagar_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -96,6 +101,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
             case 2:
               Navigator.push(
                 context,
+                MaterialPageRoute(builder: (context) => const CarteiraVacinacaoScreen()),
+              );
+              break;
+            case 3:
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const MensagensScreen()),
+              );
+              break;
+            case 4:
+              Navigator.push(
+                context,
                 MaterialPageRoute(builder: (context) => const PerfilScreen()),
               );
               break;
@@ -109,6 +126,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.calendar_today),
             label: 'Agendamentos',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.vaccines),
+            label: 'Vacinas',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.message),
+            label: 'Mensagens',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
@@ -177,6 +202,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
             const SizedBox(height: 24),
 
+            // Cards de Acesso Rápido
+            _buildQuickAccessCards(),
+            const SizedBox(height: 24),
+
             // Estatísticas
             _buildStatisticsCard(),
             const SizedBox(height: 24),
@@ -188,6 +217,126 @@ class _DashboardScreenState extends State<DashboardScreen> {
             // Notificações Recentes
             _buildNotificacoesRecentes(),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickAccessCards() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Acesso Rápido',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 16),
+        GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: 2,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+          childAspectRatio: 1.2,
+          children: [
+            _buildQuickAccessCard(
+              'Agendamentos',
+              Icons.calendar_today,
+              Colors.blue,
+              () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const AgendamentosScreen()),
+              ),
+            ),
+            _buildQuickAccessCard(
+              'Carteira de Vacinação',
+              Icons.vaccines,
+              Colors.green,
+              () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const CarteiraVacinacaoScreen()),
+              ),
+            ),
+            _buildQuickAccessCard(
+              'Documentos',
+              Icons.description,
+              Colors.orange,
+              () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const DocumentosScreen()),
+              ),
+            ),
+            _buildQuickAccessCard(
+              'Mensagens',
+              Icons.message,
+              Colors.purple,
+              () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const MensagensScreen()),
+              ),
+            ),
+            _buildQuickAccessCard(
+              'Notificações',
+              Icons.notifications,
+              Colors.red,
+              () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const NotificacoesScreen()),
+              ),
+            ),
+            _buildQuickAccessCard(
+              'Contas a Pagar',
+              Icons.payment,
+              Colors.teal,
+              () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ContasPagarScreen()),
+              ),
+            ),
+            _buildQuickAccessCard(
+              'Perfil',
+              Icons.person,
+              Colors.indigo,
+              () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const PerfilScreen()),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildQuickAccessCard(String title, IconData icon, Color color, VoidCallback onTap) {
+    return Card(
+      elevation: AppConfig.elevation,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppConfig.borderRadius),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 32,
+                color: color,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -291,10 +440,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Próximos Agendamentos',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
+                Expanded(
+                  child: Text(
+                    'Próximos Agendamentos',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 TextButton(
@@ -326,7 +477,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildAgendamentoItem(Agendamento agendamento) {
+  Widget _buildAgendamentoItem(dynamic agendamento) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
@@ -340,7 +491,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             width: 4,
             height: 60,
             decoration: BoxDecoration(
-              color: agendamento.isConfirmado ? Colors.green : Colors.orange,
+              color: agendamento.status == 'confirmado' ? Colors.green : Colors.orange,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -374,7 +525,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: agendamento.isConfirmado ? Colors.green : Colors.orange,
+              color: agendamento.status == 'confirmado' ? Colors.green : Colors.orange,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
