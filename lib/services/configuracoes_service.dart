@@ -49,4 +49,18 @@ class ConfiguracoesService {
       },
     );
   }
+
+  /// Solicitar exclusão de conta
+  Future<ApiResponse<void>> solicitarExclusaoConta() async {
+    return await _apiService.post<void>(
+      '/configuracoes/solicitar-exclusao',
+    );
+  }
+
+  /// Retirar pedido de exclusão de conta
+  Future<ApiResponse<void>> retirarPedidoExclusao() async {
+    return await _apiService.post<void>(
+      '/configuracoes/retirar-pedido-exclusao',
+    );
+  }
 }

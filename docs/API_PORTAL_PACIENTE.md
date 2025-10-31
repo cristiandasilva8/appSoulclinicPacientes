@@ -156,6 +156,7 @@ A API trata automaticamente CPFs com ou sem máscara:
 - **Autenticação**: Login, Refresh, Logout, Verificar CPF, Reset Senha, Alterar Senha
 - **Dashboard**: Dados reais com estatísticas, agendamentos e notificações
 - **Perfil**: Buscar e atualizar dados do paciente
+- **Configurações**: ✅ **NOVO** Solicitar Exclusão de Conta, ✅ **NOVO** Retirar Pedido de Exclusão
 
 ### 🔧 Endpoints Implementados (Precisa Teste)
 - **Agendamentos**: Listar, Detalhes, Cancelar, Solicitar, Horários Disponíveis
@@ -166,11 +167,12 @@ A API trata automaticamente CPFs com ou sem máscara:
 - **Configurações**: Buscar, Alterar Senha, Notificações
 
 ### 📋 Resumo de Implementação
-- **Total de Endpoints**: 25+
-- **Funcionando**: 8 endpoints principais
-- **Implementados**: 17+ endpoints adicionais
+- **Total de Endpoints**: 32
+- **Funcionando**: 12 endpoints principais (incluindo novos endpoints de exclusão)
+- **Implementados**: 20 endpoints adicionais
 - **Dados Reais**: ✅ Dashboard e Perfil retornam dados reais do paciente
 - **Autenticação JWT**: ✅ Sistema completo implementado
+- **Novidades v1.3**: ✅ Endpoints de exclusão de conta (testados e funcionando)
 
 ---
 
@@ -1514,6 +1516,15 @@ Authorization: Bearer <jwt_token>
 
 ### 10. ⚙️ Configurações
 
+**Endpoints disponíveis:**
+- `GET /configuracoes` - Buscar configurações
+- `PUT /configuracoes/senha` - Alterar senha
+- `PUT /configuracoes/notificacoes` - Configurações de notificação
+- `POST /configuracoes/solicitar-exclusao` - ✅ **NOVO** Solicitar exclusão de conta
+- `POST /configuracoes/retirar-pedido-exclusao` - ✅ **NOVO** Retirar pedido de exclusão
+
+---
+
 #### 10.1 Buscar Configurações
 ```http
 GET /api/portal/configuracoes
@@ -1573,6 +1584,90 @@ Authorization: Bearer <jwt_token>
 {
   "success": true,
   "message": "Senha alterada com sucesso"
+}
+```
+
+#### 10.3 Solicitar Exclusão de Conta
+```http
+POST /api/portal/configuracoes/solicitar-exclusao
+```
+
+**Headers:**
+```http
+Authorization: Bearer <jwt_token>
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Solicitação de exclusão registrada com sucesso. A clínica será notificada."
+}
+```
+
+**Response (401):**
+```json
+{
+  "success": false,
+  "message": "Token inválido ou expirado"
+}
+```
+
+**Response (404):**
+```json
+{
+  "success": false,
+  "message": "Paciente não encontrado"
+}
+```
+
+**Response (500):**
+```json
+{
+  "success": false,
+  "message": "Erro interno do servidor"
+}
+```
+
+#### 10.4 Retirar Pedido de Exclusão
+```http
+POST /api/portal/configuracoes/retirar-pedido-exclusao
+```
+
+**Headers:**
+```http
+Authorization: Bearer <jwt_token>
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Pedido de exclusão retirado com sucesso"
+}
+```
+
+**Response (401):**
+```json
+{
+  "success": false,
+  "message": "Token inválido ou expirado"
+}
+```
+
+**Response (404):**
+```json
+{
+  "success": false,
+  "message": "Paciente não encontrado"
+}
+```
+
+**Response (500):**
+```json
+{
+  "success": false,
+  "message": "Erro interno do servidor"
 }
 ```
 
@@ -1889,20 +1984,28 @@ Para dúvidas sobre a API:
 | PUT | `/notificacoes/{id}/marcar-lida` | 🔧 | Marcar como lida |
 | PUT | `/notificacoes/configuracoes` | 🔧 | Configurações de notificação |
 
-### ⚙️ Configurações (3 endpoints)
+### ⚙️ Configurações (5 endpoints)
 | Método | Endpoint | Status | Descrição |
 |--------|----------|--------|-----------|
 | GET | `/configuracoes` | 🔧 | Buscar configurações |
 | PUT | `/configuracoes/senha` | 🔧 | Alterar senha |
 | PUT | `/configuracoes/notificacoes` | 🔧 | Configurações de notificação |
+| POST | `/configuracoes/solicitar-exclusao` | ✅ | Solicitar exclusão de conta |
+| POST | `/configuracoes/retirar-pedido-exclusao` | ✅ | Retirar pedido de exclusão |
 
 ### 📊 Estatísticas
-- **Total de Endpoints**: 30
-- **Funcionando (✅)**: 10 endpoints
+- **Total de Endpoints**: 32
+- **Funcionando (✅)**: 12 endpoints
 - **Implementados (🔧)**: 20 endpoints
 - **Cobertura**: 100% dos módulos principais
 
 ## 📝 Histórico de Versões
+
+- **v1.3** (31/10/2025): Endpoints de exclusão de conta
+  - Adicionado endpoint `POST /configuracoes/solicitar-exclusao` para solicitar exclusão de conta
+  - Adicionado endpoint `POST /configuracoes/retirar-pedido-exclusao` para retirar pedido de exclusão
+  - Implementação completa com validação JWT e tratamento de erros
+  - Suporte a armazenamento flexível (campo dedicado ou JSON)
 
 - **v1.2** (28/01/2025): Documentação completa atualizada
   - Adicionado status detalhado de todos os endpoints
