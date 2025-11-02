@@ -51,9 +51,16 @@ class ConfiguracoesService {
   }
 
   /// Solicitar exclusão de conta
-  Future<ApiResponse<void>> solicitarExclusaoConta() async {
-    return await _apiService.post<void>(
+  /// Retorna ApiResponse com data contendo informações se já existe pedido
+  Future<ApiResponse<Map<String, dynamic>?>> solicitarExclusaoConta() async {
+    return await _apiService.post<Map<String, dynamic>?>(
       '/configuracoes/solicitar-exclusao',
+      fromJson: (data) {
+        if (data is Map) {
+          return data as Map<String, dynamic>;
+        }
+        return null;
+      },
     );
   }
 

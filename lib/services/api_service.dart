@@ -431,6 +431,17 @@ class ApiService {
         if (e.response!.statusCode == 401 && message == 'Erro de conexão') {
           message = 'Token inválido ou expirado';
         }
+        
+        // Se for erro 409 (Conflict), preservar os dados da resposta
+        if (e.response!.statusCode == 409 && data['data'] != null) {
+          // Retornar os dados mesmo com success=false para que a tela possa processar
+          return ApiResponse<T>(
+            success: false,
+            message: message,
+            data: data['data'],
+            errors: errors,
+          );
+        }
       } else if (data is String) {
         message = data;
       }

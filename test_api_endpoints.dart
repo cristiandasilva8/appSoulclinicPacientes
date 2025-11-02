@@ -3,13 +3,28 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 
 class ApiTester {
-  static const String baseUrl = 'http://localhost:8080';
-  static const String token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJwYWNpZW50ZV9pZCI6IjEiLCJjcGYiOiIwNjUuOTcxLjI4OS0wNyIsIm5vbWUiOiJQYWNpZW50ZSB0ZXN0ZSIsImVtYWlsIjoibHVhbmFkdXRyYWRjQGdtYWlsLmNvbSIsInRlbmFudF9pZCI6IjY1IiwiZGF0YWJhc2VfZ3JvdXAiOiJncm91cF9jbGluaWNhX2R1dHJhXzY1IiwiaXNzIjoiU291bENsaW5pYyBBUEkiLCJhdWQiOiJTb3VsQ2xpbmljIFVzZXJzIiwiaWF0IjoxNzYxNzgxNjQ3LCJleHAiOjE3NjE3ODUyNDd9.9IIHTJmK2oMBD4vpJwUQ_iMKc3Uzv885sWfeKXDnf-U';
+  static const String baseUrl = 'https://production.soulclinic.com.br';
+  // Token deve ser fornecido via método ou argumentos
+  static String? _token;
 
-  static Future<void> testAllEndpoints() async {
+  /// Configurar token para os testes
+  static void setToken(String token) {
+    _token = token;
+  }
+
+  static Future<void> testAllEndpoints([String? token]) async {
+    // Usar token do parâmetro ou do setter
+    _token = token ?? _token;
+    
+    if (_token == null || _token!.isEmpty) {
+      print('❌ Erro: Token não fornecido!');
+      print('💡 Use: ApiTester.setToken("seu_token") ou testAllEndpoints("seu_token")');
+      return;
+    }
+    
     print('🚀 Iniciando testes da API SoulClinic');
     print('🌐 Base URL: $baseUrl');
-    print('🔑 Token: ${token.substring(0, 50)}...');
+    print('🔑 Token: ${_token!.substring(0, _token!.length > 50 ? 50 : _token!.length)}...');
     print('=' * 80);
 
     // Testar conectividade básica
@@ -56,11 +71,16 @@ class ApiTester {
   }
 
   static Future<void> testPortalEndpoints() async {
+    if (_token == null) {
+      print('❌ Token não configurado para testes do Portal');
+      return;
+    }
+    
     print('\n🏥 Testando endpoints do Portal do Paciente...');
     
     final headers = {
       'Content-Type': 'application/json',
-      'Authorization': 'Bearer $token',
+      'Authorization': 'Bearer $_token',
     };
 
     // Testar perfil
@@ -89,22 +109,30 @@ class ApiTester {
   }
 
   static Future<void> testInternalApiEndpoints() async {
+    if (_token == null) {
+      print('❌ Token não configurado para testes da API Interna');
+      return;
+    }
+    
     print('\n🔐 Testando endpoints da API Interna (JWT)...');
     
     final headers = {
       'Content-Type': 'application/json',
-      'Authorization': 'Bearer $token',
+      'Authorization': 'Bearer $_token',
     };
 
     // Testar pacientes
+    // NOTA: Os IDs e CPFs abaixo são apenas exemplos para testes
+    // Em produção, substitua por valores reais do seu ambiente
     await testEndpoint('GET', '/api/v1/pacientes', headers: headers);
-    await testEndpoint('GET', '/api/v1/pacientes?id=1', headers: headers);
-    await testEndpoint('GET', '/api/v1/pacientes?cpf=065.971.289-07', headers: headers);
+    await testEndpoint('GET', '/api/v1/pacientes?id=1', headers: headers); // ID de exemplo
+    await testEndpoint('GET', '/api/v1/pacientes?cpf=065.971.289-07', headers: headers); // CPF de exemplo
     
     // Testar agendas
+    // NOTA: Os IDs abaixo são apenas exemplos para testes
     await testEndpoint('GET', '/api/v1/agendas', headers: headers);
-    await testEndpoint('GET', '/api/v1/agendas?profissional_id=1', headers: headers);
-    await testEndpoint('GET', '/api/v1/agendas?paciente_id=1', headers: headers);
+    await testEndpoint('GET', '/api/v1/agendas?profissional_id=1', headers: headers); // ID de exemplo
+    await testEndpoint('GET', '/api/v1/agendas?paciente_id=1', headers: headers); // ID de exemplo
     
     // Testar unidades de atendimento
     await testEndpoint('GET', '/api/v1/unidades-atendimento', headers: headers);
@@ -123,22 +151,30 @@ class ApiTester {
   }
 
   static Future<void> testExternalApiEndpoints() async {
+    if (_token == null) {
+      print('❌ Token não configurado para testes da API Externa');
+      return;
+    }
+    
     print('\n🌐 Testando endpoints da API Externa (Token)...');
     
     final headers = {
       'Content-Type': 'application/json',
-      'X-API-Token': token, // Usando o mesmo token como API token
+      'X-API-Token': _token!, // Usando o mesmo token como API token
     };
 
     // Testar pacientes
+    // NOTA: Os IDs e CPFs abaixo são apenas exemplos para testes
+    // Em produção, substitua por valores reais do seu ambiente
     await testEndpoint('GET', '/external/v1/pacientes', headers: headers);
-    await testEndpoint('GET', '/external/v1/pacientes?id=1', headers: headers);
-    await testEndpoint('GET', '/external/v1/pacientes?cpf=065.971.289-07', headers: headers);
+    await testEndpoint('GET', '/external/v1/pacientes?id=1', headers: headers); // ID de exemplo
+    await testEndpoint('GET', '/external/v1/pacientes?cpf=065.971.289-07', headers: headers); // CPF de exemplo
     
     // Testar agendas
+    // NOTA: Os IDs abaixo são apenas exemplos para testes
     await testEndpoint('GET', '/external/v1/agendas', headers: headers);
-    await testEndpoint('GET', '/external/v1/agendas?profissional_id=1', headers: headers);
-    await testEndpoint('GET', '/external/v1/agendas?paciente_id=1', headers: headers);
+    await testEndpoint('GET', '/external/v1/agendas?profissional_id=1', headers: headers); // ID de exemplo
+    await testEndpoint('GET', '/external/v1/agendas?paciente_id=1', headers: headers); // ID de exemplo
     
     // Testar unidades de atendimento
     await testEndpoint('GET', '/external/v1/unidades-atendimento', headers: headers);
@@ -214,6 +250,26 @@ class ApiTester {
   }
 }
 
-void main() async {
-  await ApiTester.testAllEndpoints();
+/// Exemplo de uso:
+/// 
+/// ```dart
+/// // Opção 1: Passar token como parâmetro
+/// await ApiTester.testAllEndpoints('seu_token_jwt_aqui');
+/// 
+/// // Opção 2: Configurar token antes
+/// ApiTester.setToken('seu_token_jwt_aqui');
+/// await ApiTester.testAllEndpoints();
+/// ```
+void main(List<String> args) async {
+  // Obter token dos argumentos ou solicitar
+  if (args.isNotEmpty) {
+    await ApiTester.testAllEndpoints(args[0]);
+  } else {
+    print('⚠️  Token não fornecido como argumento!');
+    print('💡 Uso: dart test_api_endpoints.dart <seu_token_jwt>');
+    print('💡 Ou use: ApiTester.setToken("token") antes de chamar testAllEndpoints()');
+    print('');
+    print('🔐 Por favor, forneça o token JWT como argumento:');
+    print('   dart test_api_endpoints.dart <seu_token_jwt>');
+  }
 }

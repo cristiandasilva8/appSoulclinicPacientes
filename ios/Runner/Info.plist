@@ -45,5 +45,19 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	
+	<!-- Permissões para câmera e galeria (image_picker) -->
+	<key>NSCameraUsageDescription</key>
+	<string>Este app precisa acessar a câmera para tirar fotos do seu perfil.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Este app precisa acessar suas fotos para escolher uma imagem de perfil.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Este app precisa salvar imagens na galeria.</string>
+	
+	<!-- Configurações de notificações -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 </dict>
 </plist>

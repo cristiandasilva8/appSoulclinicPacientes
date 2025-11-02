@@ -3,6 +3,7 @@ import '../config/app_config.dart';
 import '../services/dashboard_service.dart';
 import '../services/agendamentos_service.dart';
 import '../models/agendamento.dart';
+import 'solicitar_agendamento_screen.dart';
 
 class AgendamentosScreen extends StatefulWidget {
   const AgendamentosScreen({super.key});
@@ -145,13 +146,17 @@ class _AgendamentosScreenState extends State<AgendamentosScreen> {
                   children: [
                     Expanded(
                       child: ElevatedButton.icon(
-                        onPressed: () {
-                          // TODO: Implementar solicitação de agendamento
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Funcionalidade em desenvolvimento'),
+                        onPressed: () async {
+                          final result = await Navigator.of(context).push<bool>(
+                            MaterialPageRoute(
+                              builder: (context) => const SolicitarAgendamentoScreen(),
                             ),
                           );
+                          
+                          // Se a solicitação foi enviada com sucesso, recarregar agendamentos
+                          if (result == true) {
+                            _loadAgendamentos();
+                          }
                         },
                         icon: const Icon(Icons.add),
                         label: const Text('Solicitar Agendamento'),

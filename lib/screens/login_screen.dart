@@ -107,17 +107,23 @@ class _LoginScreenState extends State<LoginScreen> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           // Logo
-                          Image.asset(
-                            AppConfig.currentTenant.logoUrl,
-                            height: 80,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Icon(
-                                Icons.local_hospital,
-                                size: 80,
-                                color: Color(AppConfig.currentTenant.primaryColor),
-                              );
-                            },
-                          ),
+                          AppConfig.currentTenant.logoUrl != null
+                              ? Image.asset(
+                                  AppConfig.currentTenant.logoUrl!,
+                                  height: 80,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Icon(
+                                      Icons.local_hospital,
+                                      size: 80,
+                                      color: Color(AppConfig.currentTenant.primaryColor),
+                                    );
+                                  },
+                                )
+                              : Icon(
+                                  Icons.local_hospital,
+                                  size: 80,
+                                  color: Color(AppConfig.currentTenant.primaryColor),
+                                ),
                           const SizedBox(height: 16),
                           
                           // Título
@@ -138,55 +144,57 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           const SizedBox(height: 8),
                           
-                          // Informações de debug
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: AppConfig.isDebug ? Colors.orange[100] : Colors.green[100],
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: AppConfig.isDebug ? Colors.orange : Colors.green,
-                                width: 1,
+                          // Informações de debug (apenas em modo debug)
+                          if (AppConfig.isDebug) ...[
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: Colors.orange[100],
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: Colors.orange,
+                                  width: 1,
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.bug_report,
+                                        size: 16,
+                                        color: Colors.orange[700],
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        AppConfig.environmentInfo,
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.orange[700],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    AppConfig.currentBaseUrl,
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.orange[600],
+                                    ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
                               ),
                             ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      AppConfig.isDebug ? Icons.bug_report : Icons.check_circle,
-                                      size: 16,
-                                      color: AppConfig.isDebug ? Colors.orange[700] : Colors.green[700],
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      AppConfig.environmentInfo,
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                        color: AppConfig.isDebug ? Colors.orange[700] : Colors.green[700],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  AppConfig.currentBaseUrl,
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: AppConfig.isDebug ? Colors.orange[600] : Colors.green[600],
-                                  ),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 32),
+                            const SizedBox(height: 32),
+                          ],
 
                           // Campo CPF
                           TextFormField(

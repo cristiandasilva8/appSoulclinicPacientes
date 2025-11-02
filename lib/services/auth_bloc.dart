@@ -109,6 +109,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     emit(AuthLoading());
 
+    // Aguardar tempo mínimo para mostrar splash screen (2.5 segundos)
+    await Future.delayed(const Duration(milliseconds: 2500));
+
     try {
       final isAuthenticated = await _authService.isAuthenticated();
       

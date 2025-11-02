@@ -1,13 +1,22 @@
+import 'package:flutter/foundation.dart' show kDebugMode;
+
 class AppConfig {
   // Configurações de ambiente
-  static const bool isDebug = bool.fromEnvironment('dart.vm.product') == false;
+  // Forçar produção: defina FORCE_PRODUCTION=true nas variáveis de ambiente
+  // Exemplo: flutter run --dart-define=FORCE_PRODUCTION=true
+  static const bool _forceProduction = bool.fromEnvironment('FORCE_PRODUCTION', defaultValue: false);
+  
+  // Usa kDebugMode do Flutter que é mais confiável que bool.fromEnvironment
+  // Mas permite forçar produção mesmo em debug para testes
+  static bool get isDebug => _forceProduction ? false : kDebugMode;
   
   // URLs baseadas no ambiente
   static const String _baseUrlProducao = 'https://production.soulclinic.com.br/api/portal';
   static const String _baseUrlHomologacao = 'http://127.0.0.1:8080/api/portal';
   
   // Configurações de Multitenancy
-  static const Map<String, TenantConfig> tenants = {
+  // Usa homologação em debug e produção em release
+  static Map<String, TenantConfig> get tenants => {
     'soulclinic': TenantConfig(
       name: 'SoulClinic',
       baseUrl: isDebug ? _baseUrlHomologacao : _baseUrlProducao,
@@ -17,7 +26,7 @@ class AppConfig {
     ),
     'clinicaexemplo': TenantConfig(
       name: 'Clínica Exemplo',
-      baseUrl: isDebug ? 'http://localhost:8080/api/portal' : 'https://production.exemplo.com.br/api/portal',
+      baseUrl: isDebug ? _baseUrlHomologacao : 'https://production.exemplo.com.br/api/portal',
       primaryColor: 0xFF4CAF50,
       logoUrl: 'assets/images/exemplo_logo.png',
       crmDomain: 'exemplo.com',
@@ -73,14 +82,14 @@ class TenantConfig {
   final String name;
   final String baseUrl;
   final int primaryColor;
-  final String logoUrl;
+  final String? logoUrl; // Opcional - se não existir, usa ícone padrão
   final String crmDomain;
 
   const TenantConfig({
     required this.name,
     required this.baseUrl,
     required this.primaryColor,
-    required this.logoUrl,
+    this.logoUrl, // Não é mais obrigatório
     required this.crmDomain,
   });
 }

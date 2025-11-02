@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
@@ -15,7 +16,7 @@ class PerfilScreen extends StatefulWidget {
   State<PerfilScreen> createState() => _PerfilScreenState();
 }
 
-class _PerfilScreenState extends State<PerfilScreen> {
+class _PerfilScreenState extends State<PerfilScreen> with WidgetsBindingObserver {
   final PerfilService _perfilService = PerfilService();
   final ConfiguracoesService _configuracoesService = ConfiguracoesService();
   final _formKey = GlobalKey<FormState>();
@@ -28,19 +29,49 @@ class _PerfilScreenState extends State<PerfilScreen> {
   bool _isEditing = false;
   String? _error;
   bool _temPedidoExclusao = false;
+  bool _verificacaoPendente = true;
+  DateTime? _ultimaVerificacao;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadPerfil();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _nomeController.dispose();
     _telefoneController.dispose();
     _celularController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _user != null) {
+      // Quando o app volta ao foco, verificar pedido de exclusão novamente
+      print('🔄 App voltou ao foco - verificando pedido de exclusão...');
+      _verificarPedidoExclusao();
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Verificar pedido de exclusão sempre que a tela é montada ou quando dependências mudam
+    // Mas só se já tiver usuário carregado
+    if (_user != null && !_isLoading) {
+      // Sempre verificar quando dependências mudam (usuário volta para tela)
+      print('🔄 Dependências mudaram - verificando pedido de exclusão...');
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _verificarPedidoExclusao();
+          _verificacaoPendente = false;
+        }
+      });
+    }
   }
 
   Future<void> _loadPerfil() async {
@@ -66,16 +97,17 @@ class _PerfilScreenState extends State<PerfilScreen> {
           final user = response.data!;
           print('✅ User criado: id=${user.id}, nome=${user.nome}, email=${user.email}');
           
-          // Verificar se existe pedido de exclusão
-          await _verificarPedidoExclusao();
-          
           setState(() {
             _user = user;
             _nomeController.text = user.nome;
             _telefoneController.text = user.telefone ?? '';
             _celularController.text = user.celular ?? '';
             _isLoading = false;
+            _verificacaoPendente = true; // Permitir verificação após carregar
           });
+          
+          // Verificar se existe pedido de exclusão após carregar o perfil
+          await _verificarPedidoExclusao();
           
           print('✅ Perfil carregado com sucesso');
         } catch (parseError, stackTrace) {
@@ -148,6 +180,26 @@ class _PerfilScreenState extends State<PerfilScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Verificar pedido de exclusão sempre que a tela é construída (se já tiver usuário)
+    // Isso garante que a verificação seja feita quando o usuário volta para a tela
+    if (_user != null && !_isLoading) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          // Sempre verificar quando a tela é construída, mas evitar verificações muito frequentes
+          final agora = DateTime.now();
+          final precisaVerificar = _ultimaVerificacao == null || 
+                                  agora.difference(_ultimaVerificacao!).inSeconds > 2;
+          
+          if (_verificacaoPendente || precisaVerificar) {
+            print('🔄 Tela construída - verificando pedido de exclusão...');
+            _verificarPedidoExclusao();
+            _verificacaoPendente = false;
+            _ultimaVerificacao = agora;
+          }
+        }
+      });
+    }
+    
     return Scaffold(
       appBar: AppBar(
         title: const Text('Perfil'),
@@ -165,7 +217,10 @@ class _PerfilScreenState extends State<PerfilScreen> {
             ),
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: _loadPerfil,
+            onPressed: () {
+              _verificacaoPendente = true; // Permitir nova verificação ao atualizar
+              _loadPerfil();
+            },
           ),
         ],
       ),
@@ -538,28 +593,148 @@ class _PerfilScreenState extends State<PerfilScreen> {
   }
 
   Future<void> _verificarPedidoExclusao() async {
+    if (!mounted) return;
+    
     try {
+      print('🔍 [VERIFICAR] Iniciando verificação de pedido de exclusão...');
       final response = await _configuracoesService.buscarConfiguracoes();
+      print('📡 [VERIFICAR] Resposta das configurações: success=${response.success}');
+      
       if (response.success && response.data != null) {
         // Verificar se existe campo de pedido de exclusão nos dados
         final data = response.data!;
-        // Pode estar em diferentes formatos dependendo da implementação da API
-        final temPedido = data['pedido_exclusao'] == true ||
-                         data['solicitacao_exclusao'] == true ||
-                         (data['metadata'] != null && 
-                          data['metadata'] is Map && 
-                          (data['metadata'] as Map)['pedido_exclusao'] == true);
+        print('📋 [VERIFICAR] Dados das configurações: $data');
+        print('📋 [VERIFICAR] Chaves disponíveis: ${data.keys.toList()}');
         
+        bool temPedido = false;
+        String? campoEncontrado;
+        
+        // Verificar no campo dedicado solicitacao_exclusao
+        if (data.containsKey('solicitacao_exclusao')) {
+          final valor = data['solicitacao_exclusao'];
+          print('🔍 [VERIFICAR] Campo solicitacao_exclusao encontrado: $valor (tipo: ${valor.runtimeType})');
+          
+          if (valor == true || 
+              valor == 't' ||
+              valor == '1' ||
+              valor == 'true' ||
+              valor.toString().toLowerCase() == 'true') {
+            temPedido = true;
+            campoEncontrado = 'solicitacao_exclusao';
+            print('✅ [VERIFICAR] Pedido encontrado no campo solicitacao_exclusao: $valor');
+          }
+        }
+        
+        // Verificar no campo dados_extra (JSON)
+        if (!temPedido && data.containsKey('dados_extra')) {
+          try {
+            final dadosExtra = data['dados_extra'];
+            print('🔍 [VERIFICAR] Campo dados_extra encontrado: $dadosExtra (tipo: ${dadosExtra.runtimeType})');
+            
+            if (dadosExtra is Map) {
+              if (dadosExtra.containsKey('solicitacao_exclusao')) {
+                final valor = dadosExtra['solicitacao_exclusao'];
+                if (valor == true || valor == 't' || valor == '1' || valor == 'true') {
+                  temPedido = true;
+                  campoEncontrado = 'dados_extra.solicitacao_exclusao';
+                  print('✅ [VERIFICAR] Pedido encontrado no campo dados_extra.solicitacao_exclusao: $valor');
+                }
+              }
+              if (!temPedido && dadosExtra.containsKey('pedido_exclusao')) {
+                final valor = dadosExtra['pedido_exclusao'];
+                if (valor == true || valor == 't' || valor == '1' || valor == 'true') {
+                  temPedido = true;
+                  campoEncontrado = 'dados_extra.pedido_exclusao';
+                  print('✅ [VERIFICAR] Pedido encontrado no campo dados_extra.pedido_exclusao: $valor');
+                }
+              }
+            } else if (dadosExtra is String && dadosExtra.isNotEmpty) {
+              // Tentar parsear JSON string
+              try {
+                final parsed = json.decode(dadosExtra);
+                if (parsed is Map) {
+                  if (parsed['solicitacao_exclusao'] == true ||
+                      parsed['pedido_exclusao'] == true) {
+                    temPedido = true;
+                    campoEncontrado = 'dados_extra (JSON string)';
+                    print('✅ [VERIFICAR] Pedido encontrado no campo dados_extra (JSON string)');
+                  }
+                }
+              } catch (e) {
+                print('⚠️ [VERIFICAR] Erro ao parsear dados_extra como JSON: $e');
+              }
+            }
+          } catch (e) {
+            print('⚠️ [VERIFICAR] Erro ao processar dados_extra: $e');
+          }
+        }
+        
+        // Verificar no campo obs (fallback)
+        if (!temPedido && data.containsKey('obs') && data['obs'] != null) {
+          final obs = data['obs'].toString();
+          print('🔍 [VERIFICAR] Campo obs encontrado: $obs');
+          
+          final obsLower = obs.toLowerCase();
+          if (obsLower.contains('exclusão') || 
+              obsLower.contains('exclusao') ||
+              obsLower.contains('solicitacao_exclusao') ||
+              obsLower.contains('pedido_exclusao')) {
+            temPedido = true;
+            campoEncontrado = 'obs';
+            print('✅ [VERIFICAR] Pedido encontrado no campo obs (fallback): $obs');
+          }
+        }
+        
+        // Verificar em outros campos possíveis
+        if (!temPedido) {
+          if (data['pedido_exclusao'] == true) {
+            temPedido = true;
+            campoEncontrado = 'pedido_exclusao';
+            print('✅ [VERIFICAR] Pedido encontrado no campo pedido_exclusao');
+          } else if (data['solicitacao_exclusao_pendente'] == true) {
+            temPedido = true;
+            campoEncontrado = 'solicitacao_exclusao_pendente';
+            print('✅ [VERIFICAR] Pedido encontrado no campo solicitacao_exclusao_pendente');
+          } else if (data.containsKey('metadata') && data['metadata'] is Map) {
+            final metadata = data['metadata'] as Map;
+            if (metadata['pedido_exclusao'] == true) {
+              temPedido = true;
+              campoEncontrado = 'metadata.pedido_exclusao';
+              print('✅ [VERIFICAR] Pedido encontrado no campo metadata.pedido_exclusao');
+            }
+          }
+        }
+        
+        print('✅ [VERIFICAR] Resultado final: temPedido=$temPedido${campoEncontrado != null ? " (campo: $campoEncontrado)" : ""}');
+        
+        if (mounted) {
+          final estadoAnterior = _temPedidoExclusao;
+          setState(() {
+            _temPedidoExclusao = temPedido;
+            _ultimaVerificacao = DateTime.now();
+          });
+          
+          if (estadoAnterior != temPedido) {
+            print('🔄 [VERIFICAR] Estado mudou: $estadoAnterior -> $temPedido');
+          }
+        }
+      } else {
+        print('⚠️ [VERIFICAR] Resposta de configurações não foi bem-sucedida: success=${response.success}, message=${response.message}');
+        if (mounted) {
+          setState(() {
+            _temPedidoExclusao = false;
+          });
+        }
+      }
+    } catch (e, stackTrace) {
+      print('⚠️ [VERIFICAR] Erro ao verificar pedido de exclusão: $e');
+      print('⚠️ [VERIFICAR] Stack trace: $stackTrace');
+      // Em caso de erro, assumir que não há pedido
+      if (mounted) {
         setState(() {
-          _temPedidoExclusao = temPedido;
+          _temPedidoExclusao = false;
         });
       }
-    } catch (e) {
-      print('⚠️ Erro ao verificar pedido de exclusão: $e');
-      // Em caso de erro, assumir que não há pedido
-      setState(() {
-        _temPedidoExclusao = false;
-      });
     }
   }
 
@@ -630,16 +805,29 @@ class _PerfilScreenState extends State<PerfilScreen> {
       if (mounted) {
         Navigator.pop(context); // Fechar loading
 
-        if (response.success) {
+        // Verificar se é 409 (já existe pedido) ou sucesso
+        if (response.success || 
+            (response.data != null && 
+             (response.data!['solicitacao_existente'] == true ||
+              response.message.toLowerCase().contains('já existe') ||
+              response.message.toLowerCase().contains('pedido')))) {
+          // Já existe pedido ou foi criado com sucesso
           setState(() {
             _temPedidoExclusao = true;
+            _verificacaoPendente = false; // Já verificamos
           });
           
+          String mensagem = response.success
+              ? 'Solicitação de exclusão registrada com sucesso. A clínica será notificada.'
+              : response.message.isNotEmpty
+                  ? response.message
+                  : 'Já existe uma solicitação de exclusão pendente';
+          
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Solicitação de exclusão registrada com sucesso. A clínica será notificada.'),
-              backgroundColor: Colors.green,
-              duration: Duration(seconds: 4),
+            SnackBar(
+              content: Text(mensagem),
+              backgroundColor: response.success ? Colors.green : Colors.orange,
+              duration: const Duration(seconds: 4),
             ),
           );
         } else {
@@ -703,6 +891,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
         if (response.success) {
           setState(() {
             _temPedidoExclusao = false;
+            _verificacaoPendente = false; // Já verificamos
           });
           
           ScaffoldMessenger.of(context).showSnackBar(
@@ -908,17 +1097,64 @@ class _PerfilScreenState extends State<PerfilScreen> {
   Future<void> _capturarFoto(ImageSource source) async {
     try {
       final picker = ImagePicker();
-      final image = await picker.pickImage(source: source);
+      final image = await picker.pickImage(
+        source: source,
+        imageQuality: 85,
+        maxWidth: 800,
+        maxHeight: 800,
+      );
       
       if (image != null) {
-        // TODO: Implementar upload da foto
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Upload de foto em desenvolvimento'),
+        // Mostrar loading
+        if (!mounted) return;
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => const Center(
+            child: CircularProgressIndicator(),
           ),
         );
+
+        try {
+          // Fazer upload da foto
+          final response = await _perfilService.uploadFoto(image.path);
+          
+          if (!mounted) return;
+          Navigator.of(context).pop(); // Fechar loading
+
+          if (response.success) {
+            // Recarregar perfil para pegar a nova foto
+            await _loadPerfil();
+            
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Foto atualizada com sucesso!'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          } else {
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(response.message ?? 'Erro ao fazer upload da foto'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        } catch (e) {
+          if (!mounted) return;
+          Navigator.of(context).pop(); // Fechar loading
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Erro ao fazer upload: ${e.toString()}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Erro ao selecionar foto: ${e.toString()}'),

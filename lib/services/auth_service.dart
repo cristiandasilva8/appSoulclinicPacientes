@@ -157,14 +157,34 @@ class AuthService {
       final payloadMap = json.decode(resp);
       print('🔍 Payload como Map: $payloadMap');
 
-      // Verificar se tem dados do usuário
+      // Mapear estrutura do token JWT para User
+      // A API retorna: paciente_id, cpf, nome, email, database_group, tenant_id
       if (payloadMap['user'] != null) {
+        // Se vem com objeto user aninhado
         return User.fromJson(payloadMap['user']);
-      } else if (payloadMap['id'] != null) {
-        // Se os dados estão diretamente no payload
-        return User.fromJson(payloadMap);
+      } else if (payloadMap['paciente_id'] != null || payloadMap['id'] != null) {
+        // Mapear campos do token para User
+        // O token tem: paciente_id, database_group
+        // O User espera: id, db_group
+        final userMap = <String, dynamic>{
+          'id': payloadMap['paciente_id'] ?? payloadMap['id'],
+          'cpf': payloadMap['cpf'] ?? '',
+          'nome': payloadMap['nome'] ?? '',
+          'email': payloadMap['email'] ?? '',
+          'db_group': payloadMap['database_group'] ?? payloadMap['db_group'] ?? 'default',
+          'sexo': payloadMap['sexo'] ?? payloadMap['genero'] ?? 'N',
+          // Campos opcionais
+          if (payloadMap['telefone'] != null) 'telefone': payloadMap['telefone'],
+          if (payloadMap['celular'] != null) 'celular': payloadMap['celular'],
+          if (payloadMap['data_nascimento'] != null) 'data_nascimento': payloadMap['data_nascimento'],
+          if (payloadMap['foto'] != null) 'foto': payloadMap['foto'],
+        };
+        
+        print('🔍 User mapeado do token: $userMap');
+        return User.fromJson(userMap);
       } else {
         print('❌ Nenhum dado de usuário encontrado no token');
+        print('🔍 Campos disponíveis no payload: ${payloadMap.keys}');
         return null;
       }
     } catch (e) {

@@ -45,3 +45,10 @@ Thumbs.db
 
 # Arquivos de cache
 *.cache
+
+# Arquivos de keystore e assinatura Android
+*.jks
+*.keystore
+android/key.properties
+key.properties
+!android/key.properties.example

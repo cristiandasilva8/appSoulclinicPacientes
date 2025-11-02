@@ -4,7 +4,7 @@ import '../config/app_config.dart';
 import '../models/api_response.dart';
 
 class PortalTestService {
-  static const String baseUrl = 'http://127.0.0.1:8080/api/portal';
+  static const String baseUrl = 'https://production.soulclinic.com.br/api/portal';
 
   // Testar todos os endpoints do Portal do Paciente
   static Future<Map<String, dynamic>> testAllPortalEndpoints(String token) async {

@@ -1,16 +1,33 @@
 import 'dart:io';
 import 'dart:convert';
 
-void main() async {
+/// Script para testar conectividade com o servidor
+/// 
+/// Uso:
+///   dart test_connectivity.dart [token_jwt]
+/// 
+/// Se o token não for fornecido, a requisição será feita sem autenticação
+void main(List<String> args) async {
   print('🔍 Testando conectividade com o servidor...');
+  
+  // Obter token dos argumentos ou usar vazio
+  final token = args.isNotEmpty ? args[0] : null;
+  
+  if (token == null || token.isEmpty) {
+    print('⚠️  Token não fornecido. Usando requisição sem autenticação.');
+    print('💡 Uso: dart test_connectivity.dart <seu_token_jwt>');
+  }
   
   try {
     final client = HttpClient();
     final request = await client.getUrl(
-      Uri.parse('http://127.0.0.1:8080/api/portal/dashboard'),
+      Uri.parse('https://production.soulclinic.com.br/api/portal/dashboard'),
     );
     
-    request.headers.set('Authorization', 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJwYWNpZW50ZV9pZCI6IjEiLCJjcGYiOiIwNjUuOTcxLjI4OS0wNyIsIm5vbWUiOiJQYWNpZW50ZSB0ZXN0ZSIsImVtYWlsIjoibHVhbmFkdXRyYWRjQGdtYWlsLmNvbSIsInRlbmFudF9pZCI6IjY1IiwiZGF0YWJhc2VfZ3JvdXAiOiJncm91cF9jbGluaWNhX2R1dHJhXzY1IiwiaXNzIjoiU291bENsaW5pYyBBUEkiLCJhdWQiOiJTb3VsQ2xpbmljIFVzZXJzIiwiaWF0IjoxNzYxNzgxNjQ3LCJleHAiOjE3NjE3ODUyNDd9.9IIHTJmK2oMBD4vpJwUQ_iMKc3Uzv885sWfeKXDnf-U');
+    // Adicionar token apenas se fornecido
+    if (token != null && token.isNotEmpty) {
+      request.headers.set('Authorization', 'Bearer $token');
+    }
     request.headers.set('Content-Type', 'application/json');
     
     final response = await request.close();
@@ -28,6 +45,6 @@ void main() async {
     
   } catch (e) {
     print('❌ Erro de conectividade: $e');
-    print('💡 Verifique se o servidor está rodando em http://127.0.0.1:8080');
+    print('💡 Verifique se o servidor está acessível em https://production.soulclinic.com.br');
   }
 }

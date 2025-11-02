@@ -108,7 +108,7 @@ class DebugService {
       );
 
       // Testar requisição
-      final response = await dio.get('http://localhost:8080/api/portal/clientes');
+      final response = await dio.get('https://production.soulclinic.com.br/api/portal/clientes');
       log('✅ Requisição de teste funcionou: ${response.statusCode}');
       
     } catch (e) {
