@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:flutter/foundation.dart' show kDebugMode, kReleaseMode;
 
 class AppConfig {
   // Configurações de ambiente
@@ -6,9 +6,23 @@ class AppConfig {
   // Exemplo: flutter run --dart-define=FORCE_PRODUCTION=true
   static const bool _forceProduction = bool.fromEnvironment('FORCE_PRODUCTION', defaultValue: false);
   
-  // Usa kDebugMode do Flutter que é mais confiável que bool.fromEnvironment
-  // Mas permite forçar produção mesmo em debug para testes
-  static bool get isDebug => _forceProduction ? false : kDebugMode;
+  // Detecta se está em modo debug
+  // Em builds de release (APK/AAB), sempre usa produção
+  // Por padrão, APKs sempre usam produção (assumindo que são para distribuição)
+  // Para testar homologação, use FORCE_DEBUG=true
+  static const bool _forceDebug = bool.fromEnvironment('FORCE_DEBUG', defaultValue: false);
+  
+  static bool get isDebug {
+    // Se forçar debug explicitamente, usa debug
+    if (_forceDebug) return true;
+    // Se forçar produção, nunca é debug
+    if (_forceProduction) return false;
+    // Se for release mode, não é debug
+    if (kReleaseMode) return false;
+    // Para APKs e builds distribuídos, usa produção por padrão
+    // Caso contrário, usa kDebugMode (para hot reload e desenvolvimento)
+    return kDebugMode;
+  }
   
   // URLs baseadas no ambiente
   static const String _baseUrlProducao = 'https://production.soulclinic.com.br/api/portal';

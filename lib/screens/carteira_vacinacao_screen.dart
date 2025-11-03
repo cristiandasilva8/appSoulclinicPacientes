@@ -15,6 +15,7 @@ class _CarteiraVacinacaoScreenState extends State<CarteiraVacinacaoScreen> {
   final CarteiraVacinacaoService _carteiraService = CarteiraVacinacaoService();
   bool _isLoading = true;
   CarteiraVacinacao? _carteira;
+  String _filtroSelecionado = 'total'; // 'total', 'aplicadas', 'pendentes', 'atrasadas'
 
   @override
   void initState() {
@@ -22,16 +23,23 @@ class _CarteiraVacinacaoScreenState extends State<CarteiraVacinacaoScreen> {
     _loadCarteira();
   }
 
-  Future<void> _loadCarteira() async {
+  Future<void> _loadCarteira({String? filtro}) async {
+    // Usar filtro do parâmetro ou o filtro selecionado
+    final filtroAUsar = filtro ?? _filtroSelecionado;
+    
     setState(() {
       _isLoading = true;
+      _filtroSelecionado = filtroAUsar;
     });
 
     try {
-      final response = await _carteiraService.buscarCarteira();
+      final response = await _carteiraService.buscarCarteira(
+        filtro: filtroAUsar == 'total' ? null : filtroAUsar,
+      );
+      
       if (response.success && response.data != null) {
         try {
-          print('🔍 Dados da carteira recebidos: ${response.data}');
+          print('🔍 Dados da carteira recebidos (filtro: $filtroAUsar): ${response.data}');
           
           // Normalizar dados antes de processar
           final Map<String, dynamic> normalizedData = _normalizeCarteiraData(response.data!);
@@ -42,7 +50,7 @@ class _CarteiraVacinacaoScreenState extends State<CarteiraVacinacaoScreen> {
             _isLoading = false;
           });
           
-          print('✅ Carteira carregada com ${_carteira!.vacinas.length} vacinas');
+          print('✅ Carteira carregada com ${_carteira!.vacinas.length} vacinas (filtro: $filtroAUsar)');
         } catch (parseError) {
           print('❌ Erro ao processar dados da carteira: $parseError');
           print('📄 Dados recebidos: ${response.data}');
@@ -90,19 +98,35 @@ class _CarteiraVacinacaoScreenState extends State<CarteiraVacinacaoScreen> {
     if (normalized['estatisticas'] == null) {
       normalized['estatisticas'] = <String, dynamic>{
         'total_vacinas': 0,
+        'vacinas_aplicadas': 0,
         'vacinas_pendentes': 0,
         'vacinas_atrasadas': 0,
       };
     } else if (normalized['estatisticas'] is List) {
       // Se estatísticas vieram como lista, converter para objeto
       if ((normalized['estatisticas'] as List).isNotEmpty) {
-        normalized['estatisticas'] = (normalized['estatisticas'] as List).first;
+        final firstStats = (normalized['estatisticas'] as List).first as Map<String, dynamic>;
+        // Garantir que vacinas_aplicadas existe
+        if (!firstStats.containsKey('vacinas_aplicadas')) {
+          firstStats['vacinas_aplicadas'] = 0;
+        }
+        normalized['estatisticas'] = firstStats;
       } else {
         normalized['estatisticas'] = <String, dynamic>{
           'total_vacinas': 0,
+          'vacinas_aplicadas': 0,
           'vacinas_pendentes': 0,
           'vacinas_atrasadas': 0,
         };
+      }
+    } else if (normalized['estatisticas'] is Map) {
+      // Garantir que vacinas_aplicadas existe no objeto
+      final stats = normalized['estatisticas'] as Map<String, dynamic>;
+      if (!stats.containsKey('vacinas_aplicadas')) {
+        stats['vacinas_aplicadas'] = 0;
+      }
+      if (!stats.containsKey('vacinas_atrasadas')) {
+        stats['vacinas_atrasadas'] = 0;
       }
     }
     
@@ -164,7 +188,7 @@ class _CarteiraVacinacaoScreenState extends State<CarteiraVacinacaoScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: _loadCarteira,
+            onPressed: () => _loadCarteira(),
             tooltip: 'Atualizar',
           ),
         ],
@@ -210,11 +234,41 @@ class _CarteiraVacinacaoScreenState extends State<CarteiraVacinacaoScreen> {
         // Estatísticas
         _buildEstatisticas(),
         
+        // Filtros
+        _buildFiltros(),
+        
         // Lista de vacinas
         Expanded(
           child: _carteira!.vacinas.isEmpty
-              ? const Center(
-                  child: Text('Nenhuma vacina encontrada'),
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.vaccines_outlined,
+                        size: 64,
+                        color: Colors.grey[400],
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Nenhuma vacina encontrada',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                      if (_filtroSelecionado != 'total') ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          'com o filtro "${_getFiltroLabel(_filtroSelecionado)}"',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[500],
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                 )
               : ListView.builder(
                   padding: const EdgeInsets.all(16),
@@ -226,6 +280,81 @@ class _CarteiraVacinacaoScreenState extends State<CarteiraVacinacaoScreen> {
         ),
       ],
     );
+  }
+
+  Widget _buildFiltros() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            _buildFiltroChip('total', 'Todas', Icons.vaccines),
+            const SizedBox(width: 8),
+            _buildFiltroChip('aplicadas', 'Aplicadas', Icons.check_circle),
+            const SizedBox(width: 8),
+            _buildFiltroChip('pendentes', 'Pendentes', Icons.schedule),
+            const SizedBox(width: 8),
+            _buildFiltroChip('atrasadas', 'Atrasadas', Icons.warning),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFiltroChip(String filtro, String label, IconData icon) {
+    final isSelected = _filtroSelecionado == filtro;
+    final color = _getFiltroColor(filtro);
+    
+    return FilterChip(
+      selected: isSelected,
+      label: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: isSelected ? Colors.white : color),
+          const SizedBox(width: 4),
+          Text(label),
+        ],
+      ),
+      selectedColor: color,
+      checkmarkColor: Colors.white,
+      labelStyle: TextStyle(
+        color: isSelected ? Colors.white : Colors.grey[700],
+        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+      ),
+      onSelected: (selected) {
+        if (selected && _filtroSelecionado != filtro) {
+          _loadCarteira(filtro: filtro);
+        }
+      },
+    );
+  }
+
+  String _getFiltroLabel(String filtro) {
+    switch (filtro) {
+      case 'aplicadas':
+        return 'Aplicadas';
+      case 'pendentes':
+        return 'Pendentes';
+      case 'atrasadas':
+        return 'Atrasadas';
+      default:
+        return 'Todas';
+    }
+  }
+
+  Color _getFiltroColor(String filtro) {
+    switch (filtro) {
+      case 'aplicadas':
+        return Colors.green;
+      case 'pendentes':
+        return Colors.orange;
+      case 'atrasadas':
+        return Colors.red;
+      default:
+        return Color(AppConfig.currentTenant.primaryColor);
+    }
   }
 
   Widget _buildEstatisticas() {
@@ -250,7 +379,16 @@ class _CarteiraVacinacaoScreenState extends State<CarteiraVacinacaoScreen> {
               Colors.blue,
             ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _buildStatCard(
+              'Aplicadas',
+              stats.vacinasAplicadas.toString(),
+              Icons.check_circle,
+              Colors.green,
+            ),
+          ),
+          const SizedBox(width: 12),
           Expanded(
             child: _buildStatCard(
               'Pendentes',
@@ -259,7 +397,7 @@ class _CarteiraVacinacaoScreenState extends State<CarteiraVacinacaoScreen> {
               Colors.orange,
             ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 12),
           Expanded(
             child: _buildStatCard(
               'Atrasadas',
@@ -360,7 +498,12 @@ class _CarteiraVacinacaoScreenState extends State<CarteiraVacinacaoScreen> {
             if (vacina.lote != null && vacina.lote!.isNotEmpty) ...[
               _buildInfoRow('Lote', vacina.lote!),
             ],
-            if (vacina.aplicador != null && vacina.aplicador!.isNotEmpty) ...[
+            // Exibir aplicador apenas se tiver dados válidos
+            // Se aplicador for null ou string vazia ou contiver apenas "null", não exibir
+            if (vacina.aplicador != null && 
+                vacina.aplicador!.isNotEmpty && 
+                vacina.aplicador!.trim().toLowerCase() != 'null' &&
+                !vacina.aplicador!.trim().startsWith('{')) ...[
               _buildInfoRow('Aplicador', vacina.aplicador!),
             ],
             if (vacina.unidade != null && vacina.unidade!.isNotEmpty) ...[

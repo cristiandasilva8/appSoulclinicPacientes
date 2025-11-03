@@ -31,6 +31,51 @@ class Vacina {
   });
 
   factory Vacina.fromJson(Map<String, dynamic> json) {
+    // Processar aplicador - pode vir como string ou objeto
+    String? aplicadorString;
+    final aplicadorValue = json['aplicador'];
+    
+    if (aplicadorValue != null) {
+      if (aplicadorValue is String) {
+        // Já é uma string, usar diretamente
+        aplicadorString = aplicadorValue.isEmpty ? null : aplicadorValue;
+      } else if (aplicadorValue is Map) {
+        // É um objeto JSON - extrair e formatar os campos
+        final nome = aplicadorValue['nome'];
+        final conselho = aplicadorValue['conselho'];
+        final registro = aplicadorValue['registro'];
+        final especialidade = aplicadorValue['especialidade'];
+        
+        // Criar lista de partes do aplicador (nome, registro do conselho, especialidade)
+        final partes = <String>[];
+        
+        if (nome != null && nome.toString().isNotEmpty && nome.toString() != 'null') {
+          partes.add(nome.toString());
+        }
+        
+        if (conselho != null && conselho.toString().isNotEmpty && conselho.toString() != 'null') {
+          if (registro != null && registro.toString().isNotEmpty && registro.toString() != 'null' && registro.toString() != '') {
+            partes.add('$conselho $registro');
+          } else {
+            partes.add(conselho.toString());
+          }
+        } else if (registro != null && registro.toString().isNotEmpty && registro.toString() != 'null' && registro.toString() != '') {
+          partes.add(registro.toString());
+        }
+        
+        if (especialidade != null && especialidade.toString().isNotEmpty && especialidade.toString() != 'null' && especialidade.toString() != '') {
+          partes.add(especialidade.toString());
+        }
+        
+        // Se tiver pelo menos uma parte, juntar; senão, deixar null
+        aplicadorString = partes.isNotEmpty ? partes.join(' - ') : null;
+      } else {
+        // Tentar converter para string
+        final str = aplicadorValue.toString();
+        aplicadorString = str.isEmpty || str == 'null' ? null : str;
+      }
+    }
+    
     return Vacina(
       id: JsonUtils.safeInt(json['id']),
       nome: JsonUtils.safeString(json['nome']),
@@ -39,7 +84,7 @@ class Vacina {
       dataProximaDose: JsonUtils.safeStringNullable(json['data_proxima_dose']),
       status: JsonUtils.safeString(json['status']),
       lote: JsonUtils.safeStringNullable(json['lote']),
-      aplicador: JsonUtils.safeStringNullable(json['aplicador']),
+      aplicador: aplicadorString,
       unidade: JsonUtils.safeStringNullable(json['unidade']),
       observacoes: JsonUtils.safeStringNullable(json['observacoes']),
       reacoesAdversas: JsonUtils.safeList(json['reacoes_adversas'], (e) => ReacaoAdversa.fromJson(e)),
@@ -155,11 +200,13 @@ class CarteiraVacinacao {
 
 class EstatisticasVacina {
   final int totalVacinas;
+  final int vacinasAplicadas;
   final int vacinasPendentes;
   final int vacinasAtrasadas;
 
   EstatisticasVacina({
     required this.totalVacinas,
+    required this.vacinasAplicadas,
     required this.vacinasPendentes,
     required this.vacinasAtrasadas,
   });
@@ -167,8 +214,9 @@ class EstatisticasVacina {
   factory EstatisticasVacina.fromJson(Map<String, dynamic> json) {
     return EstatisticasVacina(
       totalVacinas: JsonUtils.safeInt(json['total_vacinas']),
+      vacinasAplicadas: JsonUtils.safeInt(json['vacinas_aplicadas'] ?? 0),
       vacinasPendentes: JsonUtils.safeInt(json['vacinas_pendentes']),
-      vacinasAtrasadas: JsonUtils.safeInt(json['vacinas_atrasadas'] ?? json['vacinas_aplicadas']), // Tenta vacinas_atrasadas primeiro, depois vacinas_aplicadas
+      vacinasAtrasadas: JsonUtils.safeInt(json['vacinas_atrasadas'] ?? 0),
     );
   }
 }

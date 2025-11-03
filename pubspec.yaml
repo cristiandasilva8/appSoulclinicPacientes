@@ -45,7 +45,7 @@ dependencies:
   form_validator: ^2.1.1
   
   # Notificações
-  flutter_local_notifications: ^16.3.0
+  flutter_local_notifications: ^19.0.0
 
 dev_dependencies:
   flutter_test:

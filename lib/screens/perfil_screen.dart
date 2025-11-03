@@ -285,12 +285,19 @@ class _PerfilScreenState extends State<PerfilScreen> with WidgetsBindingObserver
             if (_user!.preferencias != null) _buildPreferencias(),
             const SizedBox(height: 24),
 
-            // Exclusão de conta
-            _buildExclusaoConta(),
+            // Botões de ação (ANTES da exclusão de conta)
+            if (_isEditing) _buildBotoesAcao(),
+            if (_isEditing) const SizedBox(height: 24),
+
+            // Alterar senha (sempre visível)
+            _buildAlterarSenha(),
             const SizedBox(height: 24),
 
-            // Botões de ação
-            if (_isEditing) _buildBotoesAcao(),
+            // Exclusão de conta
+            _buildExclusaoConta(),
+            
+            // Padding extra no final para evitar sobreposição com botões do sistema
+            const SizedBox(height: 80),
           ],
         ),
       ),
@@ -1063,6 +1070,217 @@ class _PerfilScreenState extends State<PerfilScreen> with WidgetsBindingObserver
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildAlterarSenha() {
+    return Card(
+      elevation: AppConfig.elevation,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Segurança',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: const Icon(Icons.lock_outline),
+              title: const Text('Alterar Senha'),
+              subtitle: const Text('Alterar sua senha de acesso'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: _showAlterarSenhaDialog,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showAlterarSenhaDialog() {
+    final formKey = GlobalKey<FormState>();
+    final senhaAtualController = TextEditingController();
+    final novaSenhaController = TextEditingController();
+    final confirmarSenhaController = TextEditingController();
+    bool _obscureSenhaAtual = true;
+    bool _obscureNovaSenha = true;
+    bool _obscureConfirmarSenha = true;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Alterar Senha'),
+          content: Form(
+            key: formKey,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextFormField(
+                    controller: senhaAtualController,
+                    obscureText: _obscureSenhaAtual,
+                    decoration: InputDecoration(
+                      labelText: 'Senha Atual',
+                      prefixIcon: const Icon(Icons.lock),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscureSenhaAtual ? Icons.visibility : Icons.visibility_off,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _obscureSenhaAtual = !_obscureSenhaAtual;
+                          });
+                        },
+                      ),
+                      border: const OutlineInputBorder(),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Por favor, insira sua senha atual';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: novaSenhaController,
+                    obscureText: _obscureNovaSenha,
+                    decoration: InputDecoration(
+                      labelText: 'Nova Senha',
+                      prefixIcon: const Icon(Icons.lock_outline),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscureNovaSenha ? Icons.visibility : Icons.visibility_off,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _obscureNovaSenha = !_obscureNovaSenha;
+                          });
+                        },
+                      ),
+                      border: const OutlineInputBorder(),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Por favor, insira a nova senha';
+                      }
+                      if (value.length < 6) {
+                        return 'A senha deve ter no mínimo 6 caracteres';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: confirmarSenhaController,
+                    obscureText: _obscureConfirmarSenha,
+                    decoration: InputDecoration(
+                      labelText: 'Confirmar Nova Senha',
+                      prefixIcon: const Icon(Icons.lock_outline),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscureConfirmarSenha ? Icons.visibility : Icons.visibility_off,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _obscureConfirmarSenha = !_obscureConfirmarSenha;
+                          });
+                        },
+                      ),
+                      border: const OutlineInputBorder(),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Por favor, confirme a nova senha';
+                      }
+                      if (value != novaSenhaController.text) {
+                        return 'As senhas não coincidem';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                senhaAtualController.dispose();
+                novaSenhaController.dispose();
+                confirmarSenhaController.dispose();
+                Navigator.pop(context);
+              },
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (!formKey.currentState!.validate()) return;
+
+                // Mostrar loading
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (context) => const Center(child: CircularProgressIndicator()),
+                );
+
+                try {
+                  final response = await _configuracoesService.alterarSenha(
+                    senhaAtual: senhaAtualController.text,
+                    novaSenha: novaSenhaController.text,
+                    confirmarSenha: confirmarSenhaController.text,
+                  );
+
+                  if (mounted) {
+                    Navigator.pop(context); // Fechar loading
+
+                    if (response.success) {
+                      senhaAtualController.dispose();
+                      novaSenhaController.dispose();
+                      confirmarSenhaController.dispose();
+                      Navigator.pop(context); // Fechar dialog
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Senha alterada com sucesso!'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(response.message),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    Navigator.pop(context); // Fechar loading
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Erro ao alterar senha: ${e.toString()}'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(AppConfig.currentTenant.primaryColor),
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Alterar'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

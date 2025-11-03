@@ -6,9 +6,15 @@ class CarteiraVacinacaoService {
   final ApiService _apiService = ApiService();
 
   /// Buscar carteira de vacinação do paciente
-  Future<ApiResponse<Map<String, dynamic>>> buscarCarteira() async {
+  /// [filtro] pode ser: 'total', 'aplicadas', 'pendentes', 'atrasadas'
+  Future<ApiResponse<Map<String, dynamic>>> buscarCarteira({String? filtro}) async {
+    final queryParameters = filtro != null && filtro != 'total'
+        ? {'filtro': filtro}
+        : null;
+    
     return await _apiService.get<Map<String, dynamic>>(
       '/carteira-vacinacao',
+      queryParameters: queryParameters,
       fromJson: (data) => data,
     );
   }
